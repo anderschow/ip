@@ -1,3 +1,5 @@
+import java.util.Scanner;
+
 /**
  * The entry point for the Anders chatbot.
  */
@@ -12,10 +14,23 @@ public class Anders {
 
         System.out.println(separator);
         System.out.println(banner);
-        System.out.println("Hello! I'm Anders.");
-        System.out.println("What can I do for you?");
+        System.out.println("Hello! I'm Anders, your friendly study companion.");
+        System.out.println("What can I do for you today?");
         System.out.println(separator);
-        System.out.println("Bye. Hope to see you again soon!");
-        System.out.println(separator);
+
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            String command = scanner.nextLine();
+            System.out.println(separator);
+
+            if (command.equals("bye")) {
+                System.out.println("     Bye! Keep learning, and see you again soon!");
+                System.out.println(separator);
+                break;
+            }
+
+            System.out.println("     " + command);
+            System.out.println(separator);
+        }
     }
 }
