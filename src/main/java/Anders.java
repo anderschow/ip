@@ -2,6 +2,8 @@ import java.util.Scanner;
 
 /**
  * The entry point for the Anders chatbot.
+ *
+ * <p>Tasks are kept in memory only and are lost when the program exits.</p>
  */
 public class Anders {
     public static void main(String[] args) {
@@ -18,6 +20,8 @@ public class Anders {
         System.out.println("What can I do for you today?");
         System.out.println(separator);
 
+        String[] tasks = new String[100];
+        int taskCount = 0;
         Scanner scanner = new Scanner(System.in);
         while (true) {
             String command = scanner.nextLine();
@@ -29,7 +33,17 @@ public class Anders {
                 break;
             }
 
-            System.out.println("     " + command);
+            if (command.equals("list")) {
+                for (int i = 0; i < taskCount; i++) {
+                    System.out.println("     " + (i + 1) + ". " + tasks[i]);
+                }
+            } else if (taskCount < tasks.length) {
+                tasks[taskCount] = command;
+                taskCount++;
+                System.out.println("     added: " + command);
+            } else {
+                System.out.println("     You have reached the maximum of 100 tasks.");
+            }
             System.out.println(separator);
         }
     }
