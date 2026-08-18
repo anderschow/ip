@@ -54,6 +54,20 @@ public class Anders {
                 } catch (NumberFormatException e) {
                     System.out.println("     Please provide a valid task number.");
                 }
+            } else if (command.startsWith("unmark ")) {
+                String taskNumber = command.substring("unmark ".length()).trim();
+                try {
+                    int taskIndex = Integer.parseInt(taskNumber) - 1;
+                    if (taskIndex >= 0 && taskIndex < taskCount) {
+                        completed[taskIndex] = false;
+                        System.out.println("     OK, I've marked this task as not done yet:");
+                        System.out.println("       [ ] " + tasks[taskIndex]);
+                    } else {
+                        System.out.println("     Task number must be between 1 and " + taskCount + ".");
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("     Please provide a valid task number.");
+                }
             } else if (taskCount < tasks.length) {
                 tasks[taskCount] = command;
                 taskCount++;
