@@ -38,4 +38,14 @@ public class Task {
     public String getDescription() {
         return description;
     }
+
+    /**
+     * Returns the task description for subclasses to reuse in their display text.
+     *
+     * @return the task description
+     */
+    @Override
+    public String toString() {
+        return description;
+    }
 }
