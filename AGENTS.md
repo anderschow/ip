@@ -24,6 +24,14 @@ Unless the user says otherwise, assume that you are assisting a student working 
 
 # Project-specific requirements
 
+## Testing workflow
+
+After every code update:
+
+1. Review `test/ui-test-plan.md` and update it when the changed behavior requires new or revised UI test cases.
+2. Invoke the project-specific `test-ui` skill using `.codex/skills/test-ui/SKILL.md` and run its documented UI tests.
+3. Report the test result, including the console input/output session or the expected and actual output when a test fails.
+
 ## Java version:
 
 Ensure that Java 25 is used when running the application or build tasks. On macOS, use `sdk use java 25.0.3.fx-zulu` to switch to Java 25 if needed.
