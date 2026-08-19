@@ -36,8 +36,7 @@ public class Anders {
             if (command.equals("list")) {
                 System.out.println("     Here are the tasks in your list:");
                 for (int i = 0; i < taskCount; i++) {
-                    System.out.println("     " + (i + 1) + ".[" + tasks[i].getStatusIcon() + "] "
-                            + tasks[i].getDescription());
+                    System.out.println("     " + (i + 1) + "." + formatTask(tasks[i]));
                 }
             } else if (command.startsWith("mark ")) {
                 String taskNumber = command.substring("mark ".length()).trim();
@@ -67,14 +66,58 @@ public class Anders {
                 } catch (NumberFormatException e) {
                     System.out.println("     Please provide a valid task number.");
                 }
-            } else if (taskCount < tasks.length) {
-                tasks[taskCount] = new Task(command);
+            } else if (taskCount < tasks.length && command.startsWith("todo ")) {
+                tasks[taskCount] = new Todo(command.substring("todo ".length()).trim());
+                printTaskAdded(tasks[taskCount], taskCount + 1);
                 taskCount++;
-                System.out.println("     added: " + command);
+            } else if (taskCount < tasks.length && command.startsWith("deadline ")) {
+                String taskDetails = command.substring("deadline ".length()).trim();
+                int bySeparator = taskDetails.indexOf(" /by ");
+                if (bySeparator > 0) {
+                    String description = taskDetails.substring(0, bySeparator).trim();
+                    String by = taskDetails.substring(bySeparator + " /by ".length()).trim();
+                    tasks[taskCount] = new Deadline(description, by);
+                    printTaskAdded(tasks[taskCount], taskCount + 1);
+                    taskCount++;
+                } else {
+                    System.out.println("     Deadline tasks must include /by.");
+                }
+            } else if (taskCount < tasks.length && command.startsWith("event ")) {
+                String taskDetails = command.substring("event ".length()).trim();
+                int fromSeparator = taskDetails.indexOf(" /from ");
+                int toSeparator = taskDetails.indexOf(" /to ");
+                if (fromSeparator > 0 && toSeparator > fromSeparator) {
+                    String description = taskDetails.substring(0, fromSeparator).trim();
+                    String from = taskDetails.substring(fromSeparator + " /from ".length(), toSeparator).trim();
+                    String to = taskDetails.substring(toSeparator + " /to ".length()).trim();
+                    tasks[taskCount] = new Event(description, from, to);
+                    printTaskAdded(tasks[taskCount], taskCount + 1);
+                    taskCount++;
+                } else {
+                    System.out.println("     Event tasks must include /from and /to.");
+                }
+            } else if (taskCount < tasks.length) {
+                tasks[taskCount] = new Todo(command);
+                taskCount++;
+                printTaskAdded(tasks[taskCount - 1], taskCount);
             } else {
                 System.out.println("     You have reached the maximum of 100 tasks.");
             }
             System.out.println(separator);
         }
+    }
+
+    /** Returns the task's type, completion status, and display text. */
+    private static String formatTask(Task task) {
+        String typeIcon = task instanceof Deadline ? "D" : task instanceof Event ? "E" : "T";
+        String taskText = task.toString();
+        return "[" + typeIcon + "][" + task.getStatusIcon() + "] " + taskText.substring(4);
+    }
+
+    /** Prints the confirmation shown after adding a task. */
+    private static void printTaskAdded(Task task, int taskCount) {
+        System.out.println("     Got it. I've added this task:");
+        System.out.println("       " + task);
+        System.out.println("     Now you have " + taskCount + " tasks in the list.");
     }
 }
