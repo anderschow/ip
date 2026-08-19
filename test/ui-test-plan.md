@@ -34,6 +34,12 @@ Each test case specifies its aim, commands, and expected output associated with 
       "aim": "Verify valid marking works and invalid mark or unmark inputs do not change task completion state.",
       "commands": ["todo finish report", "mark 1", "mark abc", "mark 0", "unmark 1", "unmark xyz", "list", "bye"],
       "expected": ["Now you have 1 tasks in the list.", "[X] finish report", "Please provide a valid task number.", "Task number must be between 1 and 1.", "[ ] finish report", "Please provide a valid task number.", "1.[T][ ] finish report", "Bye! Keep learning"]
+    },
+    {
+      "name": "delete task and renumber remaining tasks",
+      "aim": "Verify a selected task is removed and later tasks shift down in the list.",
+      "commands": ["todo read book", "deadline return book /by June 6th", "event project meeting /from Aug 6th 2pm /to 4pm", "delete 2", "list", "bye"],
+      "expected": ["Now you have 1 tasks in the list.", "Now you have 2 tasks in the list.", "Now you have 3 tasks in the list.", "I've removed this task", "Now you have 2 tasks in the list.", "1.[T][ ] read book", "2.[E][ ] project meeting (from: Aug 6th 2pm to: 4pm)", "Bye! Keep learning"]
     }
   ]
 }

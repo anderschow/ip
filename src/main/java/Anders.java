@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -20,8 +22,7 @@ public class Anders {
         System.out.println("What can I do for you today?");
         System.out.println(separator);
 
-        Task[] tasks = new Task[100];
-        int taskCount = 0;
+        List<Task> tasks = new ArrayList<>();
         Scanner scanner = new Scanner(System.in);
         while (true) {
             String command = scanner.nextLine().trim();
@@ -43,19 +44,19 @@ public class Anders {
 
             if (command.equals("list")) {
                 System.out.println("     Here are the tasks in your list:");
-                for (int i = 0; i < taskCount; i++) {
-                    System.out.println("     " + (i + 1) + "." + formatTask(tasks[i]));
+                for (int i = 0; i < tasks.size(); i++) {
+                    System.out.println("     " + (i + 1) + "." + formatTask(tasks.get(i)));
                 }
             } else if (command.startsWith("mark ")) {
                 String taskNumber = command.substring("mark ".length()).trim();
                 try {
                     int taskIndex = Integer.parseInt(taskNumber) - 1;
-                    if (taskIndex >= 0 && taskIndex < taskCount) {
-                        tasks[taskIndex].markAsDone();
+                    if (taskIndex >= 0 && taskIndex < tasks.size()) {
+                        tasks.get(taskIndex).markAsDone();
                         System.out.println("     Nice! I've marked this task as done:");
-                        System.out.println("       [X] " + tasks[taskIndex].getDescription());
+                        System.out.println("       [X] " + tasks.get(taskIndex).getDescription());
                     } else {
-                        System.out.println("     Task number must be between 1 and " + taskCount + ".");
+                        System.out.println("     Task number must be between 1 and " + tasks.size() + ".");
                     }
                 } catch (NumberFormatException e) {
                     System.out.println("     Please provide a valid task number.");
@@ -64,33 +65,33 @@ public class Anders {
                 String taskNumber = command.substring("unmark ".length()).trim();
                 try {
                     int taskIndex = Integer.parseInt(taskNumber) - 1;
-                    if (taskIndex >= 0 && taskIndex < taskCount) {
-                        tasks[taskIndex].markAsNotDone();
+                    if (taskIndex >= 0 && taskIndex < tasks.size()) {
+                        tasks.get(taskIndex).markAsNotDone();
                         System.out.println("     OK, I've marked this task as not done yet:");
-                        System.out.println("       [ ] " + tasks[taskIndex].getDescription());
+                        System.out.println("       [ ] " + tasks.get(taskIndex).getDescription());
                     } else {
-                        System.out.println("     Task number must be between 1 and " + taskCount + ".");
+                        System.out.println("     Task number must be between 1 and " + tasks.size() + ".");
                     }
                 } catch (NumberFormatException e) {
                     System.out.println("     Please provide a valid task number.");
                 }
-            } else if (taskCount < tasks.length && command.startsWith("todo ")) {
-                tasks[taskCount] = new Todo(command.substring("todo ".length()).trim());
-                printTaskAdded(tasks[taskCount], taskCount + 1);
-                taskCount++;
-            } else if (taskCount < tasks.length && command.startsWith("deadline ")) {
+            } else if (command.startsWith("delete ")) {
+                deleteTask(tasks, command.substring("delete ".length()).trim());
+            } else if (command.startsWith("todo ")) {
+                tasks.add(new Todo(command.substring("todo ".length()).trim()));
+                printTaskAdded(tasks.get(tasks.size() - 1), tasks.size());
+            } else if (command.startsWith("deadline ")) {
                 String taskDetails = command.substring("deadline ".length()).trim();
                 int bySeparator = taskDetails.indexOf(" /by ");
                 if (bySeparator > 0) {
                     String description = taskDetails.substring(0, bySeparator).trim();
                     String by = taskDetails.substring(bySeparator + " /by ".length()).trim();
-                    tasks[taskCount] = new Deadline(description, by);
-                    printTaskAdded(tasks[taskCount], taskCount + 1);
-                    taskCount++;
+                    tasks.add(new Deadline(description, by));
+                    printTaskAdded(tasks.get(tasks.size() - 1), tasks.size());
                 } else {
                     System.out.println("     Deadline tasks must include /by.");
                 }
-            } else if (taskCount < tasks.length && command.startsWith("event ")) {
+            } else if (command.startsWith("event ")) {
                 String taskDetails = command.substring("event ".length()).trim();
                 int fromSeparator = taskDetails.indexOf(" /from ");
                 int toSeparator = taskDetails.indexOf(" /to ");
@@ -98,20 +99,33 @@ public class Anders {
                     String description = taskDetails.substring(0, fromSeparator).trim();
                     String from = taskDetails.substring(fromSeparator + " /from ".length(), toSeparator).trim();
                     String to = taskDetails.substring(toSeparator + " /to ".length()).trim();
-                    tasks[taskCount] = new Event(description, from, to);
-                    printTaskAdded(tasks[taskCount], taskCount + 1);
-                    taskCount++;
+                    tasks.add(new Event(description, from, to));
+                    printTaskAdded(tasks.get(tasks.size() - 1), tasks.size());
                 } else {
                     System.out.println("     Event tasks must include /from and /to.");
                 }
-            } else if (taskCount < tasks.length) {
-                tasks[taskCount] = new Todo(command);
-                taskCount++;
-                printTaskAdded(tasks[taskCount - 1], taskCount);
             } else {
-                System.out.println("     You have reached the maximum of 100 tasks.");
+                tasks.add(new Todo(command));
+                printTaskAdded(tasks.get(tasks.size() - 1), tasks.size());
             }
             System.out.println(separator);
+        }
+    }
+
+    /** Deletes the task at the one-based number supplied by the user. */
+    private static void deleteTask(List<Task> tasks, String taskNumber) {
+        try {
+            int taskIndex = Integer.parseInt(taskNumber) - 1;
+            if (taskIndex >= 0 && taskIndex < tasks.size()) {
+                Task removedTask = tasks.remove(taskIndex);
+                System.out.println("     Noted. I've removed this task:");
+                System.out.println("       " + formatTask(removedTask));
+                System.out.println("     Now you have " + tasks.size() + " tasks in the list.");
+            } else {
+                System.out.println("     Task number must be between 1 and " + tasks.size() + ".");
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("     Please provide a valid task number.");
         }
     }
 
@@ -174,8 +188,13 @@ public class Anders {
                 && command.substring("unmark ".length()).trim().isEmpty())) {
             throw new AndersException("Unmark needs a task number.");
         }
+        if (command.equals("delete") || (command.startsWith("delete ")
+                && command.substring("delete ".length()).trim().isEmpty())) {
+            throw new AndersException("Delete needs a task number.");
+        }
         boolean knownCommand = command.equals("bye") || command.equals("list")
                 || command.startsWith("mark ") || command.startsWith("unmark ")
+                || command.startsWith("delete ")
                 || command.startsWith("todo ") || command.startsWith("deadline ")
                 || command.startsWith("event ");
         if (!knownCommand) {
