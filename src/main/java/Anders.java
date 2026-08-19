@@ -24,8 +24,16 @@ public class Anders {
         int taskCount = 0;
         Scanner scanner = new Scanner(System.in);
         while (true) {
-            String command = scanner.nextLine();
+            String command = scanner.nextLine().trim();
             System.out.println(separator);
+
+            try {
+                validateCommand(command);
+            } catch (AndersException e) {
+                System.out.println("     OOPS!!! " + e.getMessage());
+                System.out.println(separator);
+                continue;
+            }
 
             if (command.equals("bye")) {
                 System.out.println("     Bye! Keep learning, and see you again soon!");
@@ -119,5 +127,59 @@ public class Anders {
         System.out.println("     Got it. I've added this task:");
         System.out.println("       " + task);
         System.out.println("     Now you have " + taskCount + " tasks in the list.");
+    }
+
+    /**
+     * Validates the command forms that require a description or a command keyword.
+     *
+     * @param command the raw user command
+     * @throws AndersException when the command is not supported or is incomplete
+     */
+    private static void validateCommand(String command) throws AndersException {
+        if (command.isEmpty()) {
+            throw new AndersException("I don't know what that means. Please enter a command.");
+        }
+        if (command.equals("todo") || (command.startsWith("todo ")
+                && command.substring("todo ".length()).trim().isEmpty())) {
+            throw new AndersException("The description of a todo cannot be empty. Please include a description!");
+        }
+        if (command.equals("deadline")) {
+            throw new AndersException("A deadline needs a description and a /by value.");
+        }
+        if (command.startsWith("deadline ")) {
+            String details = command.substring("deadline ".length()).trim();
+            int bySeparator = details.indexOf(" /by ");
+            if (bySeparator <= 0 || details.substring(bySeparator + " /by ".length()).trim().isEmpty()) {
+                throw new AndersException("A deadline needs a description and a /by value.");
+            }
+        }
+        if (command.equals("event")) {
+            throw new AndersException("An event needs a description, /from value, and /to value.");
+        }
+        if (command.startsWith("event ")) {
+            String details = command.substring("event ".length()).trim();
+            int fromSeparator = details.indexOf(" /from ");
+            int toSeparator = details.indexOf(" /to ");
+            if (fromSeparator <= 0 || toSeparator <= fromSeparator
+                    || details.substring(fromSeparator + " /from ".length(), toSeparator).trim().isEmpty()
+                    || details.substring(toSeparator + " /to ".length()).trim().isEmpty()) {
+                throw new AndersException("An event needs a description, /from value, and /to value.");
+            }
+        }
+        if (command.equals("mark") || (command.startsWith("mark ")
+                && command.substring("mark ".length()).trim().isEmpty())) {
+            throw new AndersException("Mark needs a task number.");
+        }
+        if (command.equals("unmark") || (command.startsWith("unmark ")
+                && command.substring("unmark ".length()).trim().isEmpty())) {
+            throw new AndersException("Unmark needs a task number.");
+        }
+        boolean knownCommand = command.equals("bye") || command.equals("list")
+                || command.startsWith("mark ") || command.startsWith("unmark ")
+                || command.startsWith("todo ") || command.startsWith("deadline ")
+                || command.startsWith("event ");
+        if (!knownCommand) {
+            throw new AndersException("I don't know what that means. Please try a supported command.");
+        }
     }
 }
