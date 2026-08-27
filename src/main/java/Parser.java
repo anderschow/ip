@@ -1,15 +1,49 @@
 /** Validates the command formats accepted by Anders. */
 public class Parser {
+    /** Returns the command keyword, separated from its arguments. */
+    public String commandWord(String command) {
+        int separator = command.indexOf(' ');
+        return separator < 0 ? command : command.substring(0, separator);
+    }
+
+    /** Returns the text following the command keyword. */
+    public String arguments(String command) {
+        int separator = command.indexOf(' ');
+        return separator < 0 ? "" : command.substring(separator + 1).trim();
+    }
+
+    /** Builds a task from a validated task-creation command. */
+    public Task parseTask(String command) {
+        String details = arguments(command);
+        switch (commandWord(command)) {
+        case "todo":
+            return new Todo(details);
+        case "deadline":
+            int by = details.indexOf(" /by ");
+            return new Deadline(details.substring(0, by).trim(),
+                    details.substring(by + " /by ".length()).trim());
+        case "event":
+            int from = details.indexOf(" /from ");
+            int to = details.indexOf(" /to ");
+            return new Event(details.substring(0, from).trim(),
+                    details.substring(from + " /from ".length(), to).trim(),
+                    details.substring(to + " /to ".length()).trim());
+        default:
+            throw new IllegalArgumentException("Command does not create a task");
+        }
+    }
     /** Throws an exception when the command is empty, malformed, or unsupported. */
     public void validate(String command) throws AndersException {
         if (command.isEmpty()) throw new AndersException("I don't know what that means. Please enter a command.");
         if (command.equals("todo") || command.matches("todo\\s+"))
             throw new AndersException("The description of a todo cannot be empty. Please include a description!");
         if (command.equals("deadline") || command.startsWith("deadline ")
-                && !command.substring(9).contains(" /by "))
+                && (!command.substring(9).contains(" /by ")
+                || command.substring(9, command.indexOf(" /by ")).trim().isEmpty()
+                || command.substring(command.indexOf(" /by ") + 5).trim().isEmpty()))
             throw new AndersException("A deadline needs a description and a /by value.");
         if (command.equals("event") || command.startsWith("event ")
-                && (!command.substring(6).contains(" /from ") || !command.substring(6).contains(" /to ")))
+                && !validEvent(command.substring(6)))
             throw new AndersException("An event needs a description, /from value, and /to value.");
         if (command.equals("mark") || command.matches("mark\\s+"))
             throw new AndersException("Mark needs a task number.");
@@ -20,5 +54,13 @@ public class Parser {
         boolean known = command.equals("bye") || command.equals("list")
                 || command.matches("(mark|unmark|delete|todo|deadline|event)\\s+.+");
         if (!known) throw new AndersException("I don't know what that means. Please try a supported command.");
+    }
+
+    private boolean validEvent(String details) {
+        int from = details.indexOf(" /from ");
+        int to = details.indexOf(" /to ");
+        return from > 0 && to > from
+                && !details.substring(from + 7, to).trim().isEmpty()
+                && !details.substring(to + 5).trim().isEmpty();
     }
 }
