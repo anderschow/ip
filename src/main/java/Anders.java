@@ -30,7 +30,7 @@ public class Anders {
         System.out.println("What can I do for you today?");
         System.out.println(separator);
 
-        List<Task> tasks = loadTasks();
+        TaskList tasks = new TaskList(loadTasks());
         Scanner scanner = new Scanner(System.in);
         while (true) {
             if (!scanner.hasNextLine()) {
@@ -129,7 +129,7 @@ public class Anders {
     }
 
     /** Deletes the task at the one-based number supplied by the user. */
-    private static void deleteTask(List<Task> tasks, String taskNumber) {
+    private static void deleteTask(TaskList tasks, String taskNumber) {
         try {
             int taskIndex = Integer.parseInt(taskNumber) - 1;
             if (taskIndex >= 0 && taskIndex < tasks.size()) {
@@ -168,9 +168,10 @@ public class Anders {
     }
 
     /** Writes the current task list to the relative save file. */
-    private static void saveTasks(List<Task> tasks) {
+    private static void saveTasks(TaskList tasks) {
         List<String> lines = new ArrayList<>();
-        for (Task task : tasks) {
+        for (int i = 0; i < tasks.size(); i++) {
+            Task task = tasks.get(i);
             String type = task instanceof Deadline ? "D" : task instanceof Event ? "E" : "T";
             String line = "2|" + type + "|" + (task.isDone() ? "1" : "0") + "|"
                     + encode(task.getDescription());
