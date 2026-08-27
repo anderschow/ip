@@ -15,6 +15,11 @@ public class Deadline extends Task {
         this.by = by;
     }
 
+    /** @return the deadline text */
+    public String getBy() {
+        return by;
+    }
+
     /** Returns the display text for this deadline task. */
     @Override
     public String toString() {

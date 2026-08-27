@@ -6,6 +6,33 @@ Each test case specifies its aim, commands, and expected output associated with 
 {
   "cases": [
     {
+      "name": "handle malformed saved tasks",
+      "aim": "Verify malformed records are ignored while valid records still load.",
+      "saved_file": "2|T|1|cmVhZCBib29r\nnot a valid record\n2|X|0|YmFkIHR5cGU=\n2|D|9|YmFkIHN0YXR1cw==",
+      "commands": ["list", "bye"],
+      "expected": ["1.[T][X] read book", "Bye! Keep learning"]
+    },
+    {
+      "name": "load task text containing separators",
+      "aim": "Verify encoded task fields preserve pipe characters and Unicode text.",
+      "saved_file": "2|T|0|cmVhZCB8IGJvb2s=",
+      "commands": ["list", "bye"],
+      "expected": ["1.[T][ ] read | book", "Bye! Keep learning"]
+    },
+    {
+      "name": "load saved tasks on startup",
+      "aim": "Verify tasks are reconstructed from the save file when Anders starts.",
+      "saved_file": "T | 1 | read book\nD | 0 | return book | June 6th\nE | 0 | project meeting | Aug 6th 2pm | 4pm",
+      "commands": ["list", "bye"],
+      "expected": ["1.[T][X] read book", "2.[D][ ] return book (by: June 6th)", "3.[E][ ] project meeting (from: Aug 6th 2-4pm)", "Bye! Keep learning"]
+    },
+    {
+      "name": "save tasks after changes",
+      "aim": "Verify adding, marking, and deleting tasks writes the current task list to disk.",
+      "commands": ["todo save this task", "mark 1", "delete 1", "bye"],
+      "expected": ["Now you have 1 tasks in the list.", "[X] save this task", "I've removed this task", "Bye! Keep learning"]
+    },
+    {
       "name": "add and list all task types",
       "aim": "Verify todo, deadline, event parsing, and polymorphic list display.",
       "commands": ["todo borrow book", "deadline return book /by Sunday", "event project meeting /from Mon 2pm /to 4pm", "list", "bye"],
