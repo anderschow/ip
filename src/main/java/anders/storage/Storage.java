@@ -1,3 +1,9 @@
+package anders.storage;
+import anders.collection.TaskList;
+import anders.task.Deadline;
+import anders.task.Event;
+import anders.task.Task;
+import anders.task.Todo;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -74,3 +80,4 @@ public class Storage {
     private static String encode(String value) { return Base64.getEncoder().encodeToString(value.getBytes(StandardCharsets.UTF_8)); }
     private static String decode(String value) { return new String(Base64.getDecoder().decode(value), StandardCharsets.UTF_8); }
 }
+

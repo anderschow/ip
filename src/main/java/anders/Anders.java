@@ -1,3 +1,9 @@
+package anders;
+import anders.collection.TaskList;
+import anders.parser.Parser;
+import anders.storage.Storage;
+import anders.command.Command;
+import anders.ui.Ui;
 
 /**
  * The entry point for the Anders chatbot.
@@ -28,3 +34,4 @@ public class Anders {
     }
 
 }
+

@@ -1,3 +1,5 @@
+package anders.collection;
+import anders.task.Task;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,3 +43,4 @@ public class TaskList {
         return tasks.size();
     }
 }
+

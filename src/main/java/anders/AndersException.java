@@ -1,3 +1,5 @@
+package anders;
+
 /**
  * Represents an invalid command entered by an Anders user.
  */

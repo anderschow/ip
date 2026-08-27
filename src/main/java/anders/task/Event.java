@@ -1,3 +1,5 @@
+package anders.task;
+
 /**
  * Represents a task scheduled between a start time and an end time.
  */

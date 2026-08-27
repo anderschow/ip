@@ -1,3 +1,10 @@
+package anders.ui;
+
+import anders.collection.TaskList;
+import anders.task.Deadline;
+import anders.task.Event;
+import anders.task.Task;
+
 import java.util.Scanner;
 
 /** Handles console input for Anders. */
