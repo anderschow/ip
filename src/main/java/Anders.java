@@ -1,4 +1,3 @@
-import java.util.Scanner;
 
 /**
  * The entry point for the Anders chatbot.
@@ -8,6 +7,7 @@ import java.util.Scanner;
 public class Anders {
     private static final Storage STORAGE = new Storage("data/anders.txt");
     private static final Parser PARSER = new Parser();
+    private static final Ui UI = new Ui();
     public static void main(String[] args) {
         String banner = "    _                 _                \n"
                 + "   / \\   _ __   __| | ___ _ __ ___\n"
@@ -23,12 +23,11 @@ public class Anders {
         System.out.println(separator);
 
         TaskList tasks = new TaskList(STORAGE.load());
-        Scanner scanner = new Scanner(System.in);
         while (true) {
-            if (!scanner.hasNextLine()) {
+            if (!UI.hasNextCommand()) {
                 break;
             }
-            String command = scanner.nextLine().trim();
+            String command = UI.readCommand();
             System.out.println(separator);
 
             try {
