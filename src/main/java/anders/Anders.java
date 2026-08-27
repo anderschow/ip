@@ -1,8 +1,9 @@
 package anders;
+
 import anders.collection.TaskList;
+import anders.command.Command;
 import anders.parser.Parser;
 import anders.storage.Storage;
-import anders.command.Command;
 import anders.ui.Ui;
 
 /**
@@ -13,6 +14,8 @@ import anders.ui.Ui;
 public class Anders {
     private static final Storage STORAGE = new Storage("data/anders.txt");
     private static final Ui UI = new Ui();
+
+    /** Starts the Anders command-line application. */
     public static void main(String[] args) {
         UI.showWelcome();
 

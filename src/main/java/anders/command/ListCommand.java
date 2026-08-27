@@ -1,10 +1,15 @@
 package anders.command;
+
 import anders.AndersException;
 import anders.collection.TaskList;
 import anders.storage.Storage;
 import anders.ui.Ui;
+
 /** Displays all tasks. */
 public class ListCommand extends Command {
-    @Override public void execute(TaskList tasks, Ui ui, Storage storage) { ui.showTaskList(tasks); }
+    @Override
+    public void execute(TaskList tasks, Ui ui, Storage storage) {
+        ui.showTaskList(tasks);
+    }
 }
 

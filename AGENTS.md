@@ -24,6 +24,13 @@ Unless the user says otherwise, assume that you are assisting a student working 
 
 # Project-specific requirements
 
+## Java coding standard
+
+All Java production and test code in this project MUST follow the project-specific
+`seedu-java-coding-standard` skill at `.codex/skills/seedu-java-coding-standard/SKILL.md`,
+which is based on the SE-EDU basic + intermediate Java coding standard. Apply it to
+new code and when modifying existing code; preserve behavior while correcting style.
+
 ## Testing workflow
 
 After every code update:
@@ -38,6 +45,13 @@ After every code update:
 Ensure that Java 25 is used when running the application or build tasks. On macOS, use `sdk use java 25.0.3.fx-zulu` to switch to Java 25 if needed.
 
 ## Git
+
+All future commits and branches MUST follow the project-specific
+`seedu-git-standard` skill at `.codex/skills/seedu-git-standard/SKILL.md`,
+which is based on the SE-EDU Git conventions. Commit subjects must be imperative,
+capitalized, concise, and without a final period; non-trivial commits must include
+a 72-character-wrapped body explaining what changed and why. Branches must use
+meaningful kebab-case names.
 
 Use lightweight tags unless the user requests an annotated tag.
 When proposing or creating a commit message, include enough detail to explain the rationale for the change.

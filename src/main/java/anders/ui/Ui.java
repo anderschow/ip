@@ -36,13 +36,19 @@ public class Ui {
     }
 
     /** Prints the command separator. */
-    public void showSeparator() { System.out.println("____________________________________________________________"); }
+    public void showSeparator() {
+        System.out.println("____________________________________________________________");
+    }
 
     /** Prints an error message. */
-    public void showError(String message) { System.out.println("     OOPS!!! " + message); }
+    public void showError(String message) {
+        System.out.println("     OOPS!!! " + message);
+    }
 
     /** Prints a goodbye message. */
-    public void showGoodbye() { System.out.println("     Bye! Keep learning, and see you again soon!"); }
+    public void showGoodbye() {
+        System.out.println("     Bye! Keep learning, and see you again soon!");
+    }
 
     /** Displays all tasks in the list. */
     public void showTaskList(TaskList tasks) {
@@ -79,7 +85,9 @@ public class Ui {
     }
 
     /** Displays a non-numeric task-number message. */
-    public void showInvalidTaskNumberFormat() { System.out.println("     Please provide a valid task number."); }
+    public void showInvalidTaskNumberFormat() {
+        System.out.println("     Please provide a valid task number.");
+    }
 
     private String formatTask(Task task) {
         String typeIcon = task instanceof Deadline ? "D" : task instanceof Event ? "E" : "T";

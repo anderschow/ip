@@ -31,7 +31,9 @@ public class Storage {
                 Task task = parse(line);
                 if (task != null) tasks.add(task);
             }
-        } catch (IOException | SecurityException e) { }
+        } catch (IOException | SecurityException e) {
+            // Ignore unreadable storage and start with no tasks.
+        }
         return tasks;
     }
 
@@ -51,7 +53,9 @@ public class Storage {
             Path temporary = file.resolveSibling(file.getFileName() + ".tmp");
             Files.write(temporary, lines, StandardCharsets.UTF_8);
             Files.move(temporary, file, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException | SecurityException e) { }
+        } catch (IOException | SecurityException e) {
+            // Ignore save failures; the in-memory task list remains usable.
+        }
     }
 
     private static Task parse(String line) {
@@ -74,10 +78,17 @@ public class Storage {
                     : f[0].equals("E") && f.length == 5 ? new Event(f[2], f[3], f[4]) : null;
             if (task != null && f[1].equals("1")) task.markAsDone();
             return task;
-        } catch (IllegalArgumentException e) { return null; }
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
-    private static String encode(String value) { return Base64.getEncoder().encodeToString(value.getBytes(StandardCharsets.UTF_8)); }
-    private static String decode(String value) { return new String(Base64.getDecoder().decode(value), StandardCharsets.UTF_8); }
+    private static String encode(String value) {
+        return Base64.getEncoder().encodeToString(value.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static String decode(String value) {
+        return new String(Base64.getDecoder().decode(value), StandardCharsets.UTF_8);
+    }
 }
 

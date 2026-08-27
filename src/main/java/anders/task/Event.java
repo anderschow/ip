@@ -1,12 +1,10 @@
 package anders.task;
 
-/**
- * Represents a task scheduled between a start time and an end time.
- */
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
+/** Represents a task scheduled between a start time and an end time. */
 public class Event extends Task {
     private final LocalDateTime from;
     private final LocalDateTime to;
@@ -49,10 +47,14 @@ public class Event extends Task {
     }
 
     /** @return the original start value for persistence and legacy free-form times */
-    public String getFromText() { return originalFrom; }
+    public String getFromText() {
+        return originalFrom;
+    }
 
     /** @return the original end value for persistence and legacy free-form times */
-    public String getToText() { return originalTo; }
+    public String getToText() {
+        return originalTo;
+    }
 
     private static LocalDateTime parseDateTime(String value) {
         try {
