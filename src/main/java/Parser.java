@@ -1,5 +1,21 @@
 /** Validates the command formats accepted by Anders. */
 public class Parser {
+    /** Converts a validated command string into an executable command object. */
+    public static Command parse(String command) throws AndersException {
+        Parser parser = new Parser();
+        parser.validate(command);
+        String word = parser.commandWord(command);
+        String args = parser.arguments(command);
+        switch (word) {
+        case "bye": return new ExitCommand();
+        case "list": return new ListCommand();
+        case "mark": return new MarkCommand(args, true);
+        case "unmark": return new MarkCommand(args, false);
+        case "delete": return new DeleteCommand(args);
+        case "todo": case "deadline": case "event": return new AddCommand(parser.parseTask(command));
+        default: throw new AndersException("I don't know what that means. Please try a supported command.");
+        }
+    }
     /** Returns the command keyword, separated from its arguments. */
     public String commandWord(String command) {
         int separator = command.indexOf(' ');
