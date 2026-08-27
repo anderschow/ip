@@ -175,9 +175,9 @@ public class Anders {
             String line = "2|" + type + "|" + (task.isDone() ? "1" : "0") + "|"
                     + encode(task.getDescription());
             if (task instanceof Deadline deadline) {
-                line += "|" + encode(deadline.getBy());
+                line += "|" + encode(deadline.getByText());
             } else if (task instanceof Event event) {
-                line += "|" + encode(event.getFrom()) + "|" + encode(event.getTo());
+                line += "|" + encode(event.getFromText()) + "|" + encode(event.getToText());
             }
             lines.add(line);
         }

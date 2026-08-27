@@ -39,6 +39,12 @@ Each test case specifies its aim, commands, and expected output associated with 
       "expected": ["[T] borrow book", "[D] return book (by: Sunday)", "[E] project meeting (from: Mon 2pm to: 4pm)", "1.[T][ ] borrow book", "Bye! Keep learning"]
     },
     {
+      "name": "parse and format ISO deadline dates",
+      "aim": "Verify yyyy-MM-dd deadline input is stored as a date and displayed in a readable format.",
+      "commands": ["deadline return book /by 2019-12-02", "list", "bye"],
+      "expected": ["[D] return book (by: Dec 02 2019)", "1.[D][ ] return book (by: Dec 02 2019)", "Bye! Keep learning"]
+    },
+    {
       "name": "handle invalid commands",
       "aim": "Verify empty todo, deadline, and event descriptions plus unknown commands produce helpful errors without ending the session.",
       "commands": ["", "todo", "deadline", "event", "mark", "unmark", "blah", "bye"],

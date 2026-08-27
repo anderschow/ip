@@ -1,9 +1,17 @@
 /**
  * Represents a task scheduled between a start time and an end time.
  */
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+
 public class Event extends Task {
-    private final String from;
-    private final String to;
+    private final LocalDateTime from;
+    private final LocalDateTime to;
+    private final String originalFrom;
+    private final String originalTo;
+    private static final DateTimeFormatter INPUT_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private static final DateTimeFormatter DISPLAY_FORMAT = DateTimeFormatter.ofPattern("MMM dd yyyy HH:mm");
 
     /**
      * Creates a new unfinished event task.
@@ -14,23 +22,41 @@ public class Event extends Task {
      */
     public Event(String description, String from, String to) {
         super(description);
-        this.from = from;
-        this.to = to;
+        this.from = parseDateTime(from);
+        this.to = parseDateTime(to);
+        this.originalFrom = from;
+        this.originalTo = to;
     }
 
     /** @return the event start text */
-    public String getFrom() {
+    public LocalDateTime getFrom() {
         return from;
     }
 
     /** @return the event end text */
-    public String getTo() {
+    public LocalDateTime getTo() {
         return to;
     }
 
     /** Returns the display text for this event task. */
     @Override
     public String toString() {
-        return "[E] " + super.toString() + " (from: " + from + " to: " + to + ")";
+        String fromText = from == null ? originalFrom : from.format(DISPLAY_FORMAT);
+        String toText = to == null ? originalTo : to.format(DISPLAY_FORMAT);
+        return "[E] " + super.toString() + " (from: " + fromText + " to: " + toText + ")";
+    }
+
+    /** @return the original start value for persistence and legacy free-form times */
+    public String getFromText() { return originalFrom; }
+
+    /** @return the original end value for persistence and legacy free-form times */
+    public String getToText() { return originalTo; }
+
+    private static LocalDateTime parseDateTime(String value) {
+        try {
+            return LocalDateTime.parse(value, INPUT_FORMAT);
+        } catch (DateTimeParseException ignored) {
+            return null;
+        }
     }
 }
