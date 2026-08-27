@@ -28,9 +28,10 @@ Unless the user says otherwise, assume that you are assisting a student working 
 
 After every code update:
 
-1. Review `test/ui-test-plan.md` and update it when the changed behavior requires new or revised UI test cases.
-2. Invoke the project-specific `test-ui` skill using `.codex/skills/test-ui/SKILL.md` and run its documented UI tests.
-3. Report the test result, including the console input/output session or the expected and actual output when a test fails.
+1. Update or add JUnit tests so that tests cover at least the top 50% highest-value methods, prioritizing complex, core, or critical business logic. JUnit tests must be updated after each code change to maintain compliance with this target.
+2. Review `test/ui-test-plan.md` and update it when the changed behavior requires new or revised UI test cases.
+3. Invoke the project-specific `test-ui` skill using `.codex/skills/test-ui/SKILL.md` and run its documented UI tests.
+4. Report the test result, including the console input/output session or the expected and actual output when a test fails.
 
 ## Java version:
 
