@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import anders.AndersException;
 import anders.command.AddCommand;
 import anders.command.ExitCommand;
+import anders.command.FindCommand;
 import anders.command.MarkCommand;
 import anders.task.Deadline;
 import anders.task.Event;
@@ -51,6 +52,7 @@ public class ParserTest {
         assertInstanceOf(ExitCommand.class, Parser.parse("bye"));
         assertInstanceOf(AddCommand.class, Parser.parse("todo read book"));
         assertInstanceOf(MarkCommand.class, Parser.parse("mark 1"));
+        assertInstanceOf(FindCommand.class, Parser.parse("find book"));
     }
 
     @Test
@@ -68,5 +70,6 @@ public class ParserTest {
         assertThrows(AndersException.class, () -> parser.validate("deadline return book"));
         assertThrows(AndersException.class, () -> parser.validate("event meeting /from 2pm"));
         assertThrows(AndersException.class, () -> parser.validate("unknown command"));
+        assertThrows(AndersException.class, () -> parser.validate("find"));
     }
 }

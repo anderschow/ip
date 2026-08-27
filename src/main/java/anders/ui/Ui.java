@@ -52,6 +52,18 @@ public class Ui {
         }
     }
 
+    /** Displays tasks whose descriptions contain the supplied keyword. */
+    public void showMatchingTasks(TaskList tasks, String keyword) {
+        System.out.println("     Here are the matching tasks in your list:");
+        String searchText = keyword.toLowerCase();
+        for (int i = 0; i < tasks.size(); i++) {
+            Task task = tasks.get(i);
+            if (task.getDescription().toLowerCase().contains(searchText)) {
+                System.out.println("     " + (i + 1) + "." + formatTask(task));
+            }
+        }
+    }
+
     /** Displays a task-added confirmation. */
     public void showTaskAdded(Task task, int taskCount) {
         System.out.println("     Got it. I've added this task:");
