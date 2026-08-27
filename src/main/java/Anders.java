@@ -7,6 +7,7 @@ import java.util.Scanner;
  */
 public class Anders {
     private static final Storage STORAGE = new Storage("data/anders.txt");
+    private static final Parser PARSER = new Parser();
     public static void main(String[] args) {
         String banner = "    _                 _                \n"
                 + "   / \\   _ __   __| | ___ _ __ ___\n"
@@ -31,7 +32,7 @@ public class Anders {
             System.out.println(separator);
 
             try {
-                validateCommand(command);
+                PARSER.validate(command);
             } catch (AndersException e) {
                 System.out.println("     OOPS!!! " + e.getMessage());
                 System.out.println(separator);
