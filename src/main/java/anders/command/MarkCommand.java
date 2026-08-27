@@ -9,6 +9,8 @@ public class MarkCommand extends Command {
     private final boolean done;
     /** Creates a mark or unmark command. */
     public MarkCommand(String taskNumber, boolean done) { this.taskNumber = taskNumber; this.done = done; }
+
+    /** Updates the selected task's completion state and saves the task list. */
     @Override public void execute(TaskList tasks, Ui ui, Storage storage) {
         try {
             int index = Integer.parseInt(taskNumber) - 1;
@@ -18,4 +20,3 @@ public class MarkCommand extends Command {
         } catch (NumberFormatException e) { ui.showInvalidTaskNumberFormat(); }
     }
 }
-

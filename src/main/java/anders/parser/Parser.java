@@ -84,6 +84,7 @@ public class Parser {
         if (!known) throw new AndersException("I don't know what that means. Please try a supported command.");
     }
 
+    /** Checks that an event contains non-empty {@code /from} and {@code /to} values. */
     private boolean validEvent(String details) {
         int from = details.indexOf(" /from ");
         int to = details.indexOf(" /to ");
@@ -92,4 +93,3 @@ public class Parser {
                 && !details.substring(to + 5).trim().isEmpty();
     }
 }
-

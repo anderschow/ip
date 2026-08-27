@@ -54,6 +54,7 @@ public class Storage {
         } catch (IOException | SecurityException e) { }
     }
 
+    /** Converts one saved record into a task, or returns {@code null} if invalid. */
     private static Task parse(String line) {
         if (line == null || line.trim().isEmpty()) return null;
         try {
@@ -77,7 +78,13 @@ public class Storage {
         } catch (IllegalArgumentException e) { return null; }
     }
 
-    private static String encode(String value) { return Base64.getEncoder().encodeToString(value.getBytes(StandardCharsets.UTF_8)); }
-    private static String decode(String value) { return new String(Base64.getDecoder().decode(value), StandardCharsets.UTF_8); }
-}
+    /** Encodes a task field so separators and Unicode characters are preserved. */
+    private static String encode(String value) {
+        return Base64.getEncoder().encodeToString(value.getBytes(StandardCharsets.UTF_8));
+    }
 
+    /** Decodes a previously encoded task field. */
+    private static String decode(String value) {
+        return new String(Base64.getDecoder().decode(value), StandardCharsets.UTF_8);
+    }
+}
