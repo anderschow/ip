@@ -1,6 +1,14 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.util.Base64;
 
 /**
  * The entry point for the Anders chatbot.
@@ -22,9 +30,12 @@ public class Anders {
         System.out.println("What can I do for you today?");
         System.out.println(separator);
 
-        List<Task> tasks = new ArrayList<>();
+        List<Task> tasks = loadTasks();
         Scanner scanner = new Scanner(System.in);
         while (true) {
+            if (!scanner.hasNextLine()) {
+                break;
+            }
             String command = scanner.nextLine().trim();
             System.out.println(separator);
 
@@ -53,6 +64,7 @@ public class Anders {
                     int taskIndex = Integer.parseInt(taskNumber) - 1;
                     if (taskIndex >= 0 && taskIndex < tasks.size()) {
                         tasks.get(taskIndex).markAsDone();
+                        saveTasks(tasks);
                         System.out.println("     Nice! I've marked this task as done:");
                         System.out.println("       [X] " + tasks.get(taskIndex).getDescription());
                     } else {
@@ -67,6 +79,7 @@ public class Anders {
                     int taskIndex = Integer.parseInt(taskNumber) - 1;
                     if (taskIndex >= 0 && taskIndex < tasks.size()) {
                         tasks.get(taskIndex).markAsNotDone();
+                        saveTasks(tasks);
                         System.out.println("     OK, I've marked this task as not done yet:");
                         System.out.println("       [ ] " + tasks.get(taskIndex).getDescription());
                     } else {
@@ -79,6 +92,7 @@ public class Anders {
                 deleteTask(tasks, command.substring("delete ".length()).trim());
             } else if (command.startsWith("todo ")) {
                 tasks.add(new Todo(command.substring("todo ".length()).trim()));
+                saveTasks(tasks);
                 printTaskAdded(tasks.get(tasks.size() - 1), tasks.size());
             } else if (command.startsWith("deadline ")) {
                 String taskDetails = command.substring("deadline ".length()).trim();
@@ -87,6 +101,7 @@ public class Anders {
                     String description = taskDetails.substring(0, bySeparator).trim();
                     String by = taskDetails.substring(bySeparator + " /by ".length()).trim();
                     tasks.add(new Deadline(description, by));
+                    saveTasks(tasks);
                     printTaskAdded(tasks.get(tasks.size() - 1), tasks.size());
                 } else {
                     System.out.println("     Deadline tasks must include /by.");
@@ -100,6 +115,7 @@ public class Anders {
                     String from = taskDetails.substring(fromSeparator + " /from ".length(), toSeparator).trim();
                     String to = taskDetails.substring(toSeparator + " /to ".length()).trim();
                     tasks.add(new Event(description, from, to));
+                    saveTasks(tasks);
                     printTaskAdded(tasks.get(tasks.size() - 1), tasks.size());
                 } else {
                     System.out.println("     Event tasks must include /from and /to.");
@@ -118,6 +134,7 @@ public class Anders {
             int taskIndex = Integer.parseInt(taskNumber) - 1;
             if (taskIndex >= 0 && taskIndex < tasks.size()) {
                 Task removedTask = tasks.remove(taskIndex);
+                saveTasks(tasks);
                 System.out.println("     Noted. I've removed this task:");
                 System.out.println("       " + formatTask(removedTask));
                 System.out.println("     Now you have " + tasks.size() + " tasks in the list.");
@@ -127,6 +144,114 @@ public class Anders {
         } catch (NumberFormatException e) {
             System.out.println("     Please provide a valid task number.");
         }
+    }
+
+    private static final Path SAVE_FILE = Paths.get("data", "anders.txt");
+
+    /** Loads saved tasks when the save file exists; otherwise starts with an empty list. */
+    private static List<Task> loadTasks() {
+        List<Task> tasks = new ArrayList<>();
+        if (!Files.exists(SAVE_FILE)) {
+            return tasks;
+        }
+        try {
+            for (String line : Files.readAllLines(SAVE_FILE, StandardCharsets.UTF_8)) {
+                Task task = parseTask(line);
+                if (task != null) {
+                    tasks.add(task);
+                }
+            }
+        } catch (IOException | SecurityException e) {
+            System.out.println("     OOPS!!! I could not load the saved tasks.");
+        }
+        return tasks;
+    }
+
+    /** Writes the current task list to the relative save file. */
+    private static void saveTasks(List<Task> tasks) {
+        List<String> lines = new ArrayList<>();
+        for (Task task : tasks) {
+            String type = task instanceof Deadline ? "D" : task instanceof Event ? "E" : "T";
+            String line = "2|" + type + "|" + (task.isDone() ? "1" : "0") + "|"
+                    + encode(task.getDescription());
+            if (task instanceof Deadline deadline) {
+                line += "|" + encode(deadline.getBy());
+            } else if (task instanceof Event event) {
+                line += "|" + encode(event.getFrom()) + "|" + encode(event.getTo());
+            }
+            lines.add(line);
+        }
+        try {
+            Files.createDirectories(SAVE_FILE.getParent());
+            Path temporaryFile = SAVE_FILE.resolveSibling(SAVE_FILE.getFileName() + ".tmp");
+            Files.write(temporaryFile, lines, StandardCharsets.UTF_8);
+            try {
+                Files.move(temporaryFile, SAVE_FILE, StandardCopyOption.REPLACE_EXISTING,
+                        StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException e) {
+                Files.move(temporaryFile, SAVE_FILE, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } catch (IOException | SecurityException e) {
+            System.out.println("     OOPS!!! I could not save the tasks.");
+        }
+    }
+
+    /** Parses one versioned save line, or the original human-readable format. */
+    private static Task parseTask(String line) {
+        if (line == null || line.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            String[] fields = line.split("\\|", -1);
+            if (fields.length >= 4 && fields[0].equals("2")) {
+                String type = fields[1];
+                boolean done = parseStatus(fields[2]);
+                String description = decode(fields[3]);
+                Task task;
+                if (type.equals("T") && fields.length == 4) {
+                    task = new Todo(description);
+                } else if (type.equals("D") && fields.length == 5) {
+                    task = new Deadline(description, decode(fields[4]));
+                } else if (type.equals("E") && fields.length == 6) {
+                    task = new Event(description, decode(fields[4]), decode(fields[5]));
+                } else {
+                    return null;
+                }
+                if (done) {
+                    task.markAsDone();
+                }
+                return task;
+            }
+            String[] legacy = line.split("\\s*\\|\\s*", -1);
+            if (legacy.length < 3 || !(legacy[1].equals("0") || legacy[1].equals("1"))) {
+                return null;
+            }
+            Task task = legacy[0].equals("T") && legacy.length == 3 ? new Todo(legacy[2])
+                    : legacy[0].equals("D") && legacy.length == 4 ? new Deadline(legacy[2], legacy[3])
+                    : legacy[0].equals("E") && legacy.length == 5
+                    ? new Event(legacy[2], legacy[3], legacy[4]) : null;
+            if (task != null && legacy[1].equals("1")) {
+                task.markAsDone();
+            }
+            return task;
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private static boolean parseStatus(String status) {
+        if (!status.equals("0") && !status.equals("1")) {
+            throw new IllegalArgumentException("Invalid completion status");
+        }
+        return status.equals("1");
+    }
+
+    private static String encode(String value) {
+        return Base64.getEncoder().encodeToString(value.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static String decode(String value) {
+        return new String(Base64.getDecoder().decode(value), StandardCharsets.UTF_8);
     }
 
     /** Returns the task's type, completion status, and display text. */

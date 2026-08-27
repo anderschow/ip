@@ -39,6 +39,11 @@ public class Task {
         return description;
     }
 
+    /** @return whether this task is completed */
+    public boolean isDone() {
+        return isDone;
+    }
+
     /**
      * Returns the task description for subclasses to reuse in their display text.
      *
