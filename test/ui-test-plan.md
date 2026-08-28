@@ -73,6 +73,12 @@ Each test case specifies its aim, commands, and expected output associated with 
       "aim": "Verify a selected task is removed and later tasks shift down in the list.",
       "commands": ["todo read book", "deadline return book /by June 6th", "event project meeting /from Aug 6th 2pm /to 4pm", "delete 2", "list", "bye"],
       "expected": ["Now you have 1 tasks in the list.", "Now you have 2 tasks in the list.", "Now you have 3 tasks in the list.", "I've removed this task", "Now you have 2 tasks in the list.", "1.[T][ ] read book", "2.[E][ ] project meeting (from: Aug 6th 2pm to: 4pm)", "Bye! Keep learning"]
+    },
+    {
+      "name": "find tasks by keyword",
+      "aim": "Verify find displays matching task descriptions with their original list numbers.",
+      "commands": ["todo read book", "deadline return book /by June 6th", "todo revise notes", "find BOOK", "bye"],
+      "expected": ["1.[T][ ] read book", "2.[D][ ] return book (by: June 6th)", "Bye! Keep learning"]
     }
   ]
 }

@@ -5,6 +5,7 @@ import anders.command.AddCommand;
 import anders.command.Command;
 import anders.command.DeleteCommand;
 import anders.command.ExitCommand;
+import anders.command.FindCommand;
 import anders.command.ListCommand;
 import anders.command.MarkCommand;
 import anders.task.Deadline;
@@ -93,8 +94,10 @@ public class Parser {
             throw new AndersException("Unmark needs a task number.");
         if (command.equals("delete") || command.matches("delete\\s+"))
             throw new AndersException("Delete needs a task number.");
+        if (command.equals("find") || command.matches("find\\s+"))
+            throw new AndersException("Find needs a keyword.");
         boolean known = command.equals("bye") || command.equals("list")
-                || command.matches("(mark|unmark|delete|todo|deadline|event)\\s+.+");
+                || command.matches("(mark|unmark|delete|find|todo|deadline|event)\\s+.+");
         if (!known) throw new AndersException("I don't know what that means. Please try a supported command.");
     }
 
