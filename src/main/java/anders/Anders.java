@@ -1,8 +1,9 @@
 package anders;
+
 import anders.collection.TaskList;
+import anders.command.Command;
 import anders.parser.Parser;
 import anders.storage.Storage;
-import anders.command.Command;
 import anders.ui.Ui;
 
 /**

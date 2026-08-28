@@ -1,12 +1,10 @@
 package anders.task;
 
-/**
- * Represents a task that must be completed by a specified time.
- */
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
+/** Represents a task that must be completed by a specified time. */
 public class Deadline extends Task {
     private final LocalDate by;
     private final String originalBy;
