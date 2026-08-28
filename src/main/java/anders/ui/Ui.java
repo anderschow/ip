@@ -81,6 +81,7 @@ public class Ui {
     /** Displays a non-numeric task-number message. */
     public void showInvalidTaskNumberFormat() { System.out.println("     Please provide a valid task number."); }
 
+    /** Formats a task with its type and completion icons for console display. */
     private String formatTask(Task task) {
         String typeIcon = task instanceof Deadline ? "D" : task instanceof Event ? "E" : "T";
         String taskText = task.toString();

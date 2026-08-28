@@ -9,6 +9,8 @@ public class DeleteCommand extends Command {
     private final String taskNumber;
     /** Creates a delete command. */
     public DeleteCommand(String taskNumber) { this.taskNumber = taskNumber; }
+
+    /** Deletes the selected task when its user-facing number is valid. */
     @Override public void execute(TaskList tasks, Ui ui, Storage storage) {
         try {
             int index = Integer.parseInt(taskNumber) - 1;

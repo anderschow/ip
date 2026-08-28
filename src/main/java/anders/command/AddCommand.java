@@ -9,8 +9,9 @@ public class AddCommand extends Command {
     private final Task task;
     /** Creates an add command for the supplied task. */
     public AddCommand(Task task) { this.task = task; }
+
+    /** Adds the task, saves the updated list, and shows a confirmation. */
     @Override public void execute(TaskList tasks, Ui ui, Storage storage) {
         tasks.add(task); storage.save(tasks); ui.showTaskAdded(task, tasks.size());
     }
 }
-

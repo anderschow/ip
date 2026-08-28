@@ -13,6 +13,8 @@ import anders.ui.Ui;
 public class Anders {
     private static final Storage STORAGE = new Storage("data/anders.txt");
     private static final Ui UI = new Ui();
+
+    /** Starts Anders and processes commands until the user exits or input ends. */
     public static void main(String[] args) {
         UI.showWelcome();
 
@@ -34,4 +36,3 @@ public class Anders {
     }
 
 }
-
