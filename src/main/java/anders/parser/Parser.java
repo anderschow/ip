@@ -12,6 +12,7 @@ import anders.task.Deadline;
 import anders.task.Event;
 import anders.task.Task;
 import anders.task.Todo;
+import java.time.format.DateTimeParseException;
 
 /** Validates the command formats accepted by Anders. */
 public class Parser {
@@ -32,6 +33,8 @@ public class Parser {
             return new MarkCommand(args, false);
         case "delete":
             return new DeleteCommand(args);
+        case "find":
+            return new FindCommand(args);
         case "todo":
         case "deadline":
         case "event":
@@ -85,9 +88,23 @@ public class Parser {
                 || command.substring(9, command.indexOf(" /by ")).trim().isEmpty()
                 || command.substring(command.indexOf(" /by ") + 5).trim().isEmpty()))
             throw new AndersException("A deadline needs a description and a /by value.");
+        if (command.startsWith("deadline ")) {
+            try {
+                parseTask(command);
+            } catch (DateTimeParseException e) {
+                throw new AndersException("A deadline must use d/M/yyyy or d/M/yyyy HHmm format.");
+            }
+        }
         if (command.equals("event") || command.startsWith("event ")
                 && !validEvent(command.substring(6)))
             throw new AndersException("An event needs a description, /from value, and /to value.");
+        if (command.startsWith("event ")) {
+            try {
+                parseTask(command);
+            } catch (DateTimeParseException e) {
+                throw new AndersException("Event dates must use yyyy-MM-dd or yyyy-MM-dd HHmm format.");
+            }
+        }
         if (command.equals("mark") || command.matches("mark\\s+"))
             throw new AndersException("Mark needs a task number.");
         if (command.equals("unmark") || command.matches("unmark\\s+"))

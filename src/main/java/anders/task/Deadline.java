@@ -1,47 +1,63 @@
 package anders.task;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 /** Represents a task that must be completed by a specified time. */
 public class Deadline extends Task {
-    private final LocalDate by;
-    private final String originalBy;
+    private final LocalDateTime by;
+    private final boolean hasTime;
+    private final DateTimeFormatter persistenceFormat;
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("d/M/yyyy");
+    private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("d/M/yyyy HHmm");
     private static final DateTimeFormatter DISPLAY_FORMAT = DateTimeFormatter.ofPattern("MMM dd yyyy");
 
     /**
      * Creates a new unfinished deadline task.
      *
      * @param description the task description
-     * @param by the deadline in yyyy-MM-dd format (legacy free-form values are also accepted)
+     * @param by the deadline in d/M/yyyy or d/M/yyyy HHmm format
      */
     public Deadline(String description, String by) {
         super(description);
-        LocalDate parsedDate = null;
+        LocalDateTime parsedDateTime;
+        boolean containsTime;
+        DateTimeFormatter format;
         try {
-            parsedDate = LocalDate.parse(by);
-        } catch (DateTimeParseException ignored) {
-            // Keep accepting dates saved by earlier versions of Anders.
+            parsedDateTime = LocalDateTime.parse(by, DATE_TIME_FORMAT);
+            containsTime = true;
+            format = DATE_TIME_FORMAT;
+        } catch (DateTimeParseException e) {
+            format = DATE_FORMAT;
+            try {
+                parsedDateTime = LocalDate.parse(by, format).atStartOfDay();
+            } catch (DateTimeParseException invalidLocalFormat) {
+                format = DateTimeFormatter.ISO_LOCAL_DATE;
+                parsedDateTime = LocalDate.parse(by, format).atStartOfDay();
+            }
+            containsTime = false;
         }
-        this.by = parsedDate;
-        this.originalBy = by;
+        this.by = parsedDateTime;
+        this.hasTime = containsTime;
+        this.persistenceFormat = format;
     }
 
-    /** @return the deadline text */
-    public LocalDate getBy() {
+    /** Returns the typed deadline date. */
+    public LocalDateTime getBy() {
         return by;
     }
 
     /** Returns the display text for this deadline task. */
     @Override
     public String toString() {
-        String displayDate = by == null ? originalBy : by.format(DISPLAY_FORMAT);
-        return "[D] " + super.toString() + " (by: " + displayDate + ")";
+        String display = by.format(DISPLAY_FORMAT) + (hasTime ? " " + by.format(DateTimeFormatter.ofPattern("HHmm")) : "");
+        return "[D] " + super.toString() + " (by: " + display + ")";
     }
 
-    /** @return the original value, used for persistence and legacy free-form dates */
+    /** Returns the canonical value used for persistence. */
     public String getByText() {
-        return originalBy;
+        return by.format(persistenceFormat);
     }
 }

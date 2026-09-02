@@ -33,17 +33,17 @@ public class StorageTest {
         Path file = temporaryDirectory.resolve("tasks.txt");
         Files.write(file, List.of(
                 "2|T|1|cmVhZCB8IGJvb2s=",
-                "2|D|0|cmV0dXJuIGJvb2s=|SnVuZSA2dGg=",
-                "2|E|0|cHJvamVjdCBtZWV0aW5n|QXVnIDZ0aCAycG0=|NHBt"));
+                "2|D|0|cmV0dXJuIGJvb2s=|MjAxOS0xMi0wMg==",
+                "2|E|0|cHJvamVjdCBtZWV0aW5n|MjAyNS0wMS0wMSAxNDowMA==|MjAyNS0wMS0wMSAxNjowMA=="));
 
         List<Task> tasks = new Storage(file.toString()).load();
 
         assertEquals(3, tasks.size());
         assertEquals("read | book", tasks.get(0).getDescription());
         assertTrue(tasks.get(0).isDone());
-        assertEquals("June 6th", ((Deadline) tasks.get(1)).getByText());
-        assertEquals("Aug 6th 2pm", ((Event) tasks.get(2)).getFromText());
-        assertEquals("4pm", ((Event) tasks.get(2)).getToText());
+        assertEquals("2019-12-02", ((Deadline) tasks.get(1)).getByText());
+        assertEquals("2025-01-01 1400", ((Event) tasks.get(2)).getFromText());
+        assertEquals("2025-01-01 1600", ((Event) tasks.get(2)).getToText());
     }
 
     @Test
@@ -69,8 +69,8 @@ public class StorageTest {
         Task todo = new Todo("read | book");
         todo.markAsDone();
         tasks.add(todo);
-        tasks.add(new Deadline("return book", "June 6th"));
-        tasks.add(new Event("meeting", "Aug 6th 2pm", "4pm"));
+        tasks.add(new Deadline("return book", "2019-12-02"));
+        tasks.add(new Event("meeting", "2025-01-01 14:00", "2025-01-01 16:00"));
 
         new Storage(file.toString()).save(tasks);
 
@@ -78,7 +78,7 @@ public class StorageTest {
         assertEquals(3, loaded.size());
         assertEquals("read | book", loaded.get(0).getDescription());
         assertTrue(loaded.get(0).isDone());
-        assertEquals("June 6th", ((Deadline) loaded.get(1)).getByText());
-        assertEquals("Aug 6th 2pm", ((Event) loaded.get(2)).getFromText());
+        assertEquals("2019-12-02", ((Deadline) loaded.get(1)).getByText());
+        assertEquals("2025-01-01 1400", ((Event) loaded.get(2)).getFromText());
     }
 }

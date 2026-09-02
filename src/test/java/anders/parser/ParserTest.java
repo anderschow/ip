@@ -14,6 +14,7 @@ import anders.task.Event;
 import anders.task.Task;
 import anders.task.Todo;
 import org.junit.jupiter.api.Test;
+import java.time.LocalDateTime;
 
 /** Tests command parsing and validation, which drive Anders' core input flow. */
 public class ParserTest {
@@ -30,21 +31,23 @@ public class ParserTest {
 
     @Test
     public void parseTask_deadlineCommand_createsDeadlineWithDueDate() {
-        Task task = parser.parseTask("deadline return book /by 2019-12-02");
+        Task task = parser.parseTask("deadline return book /by 2/12/2019 1800");
 
         Deadline deadline = assertInstanceOf(Deadline.class, task);
         assertEquals("return book", deadline.getDescription());
-        assertEquals("2019-12-02", deadline.getByText());
+        assertEquals(LocalDateTime.of(2019, 12, 2, 18, 0), deadline.getBy());
+        assertEquals("2/12/2019 1800", deadline.getByText());
+        assertEquals(true, deadline.toString().contains("Dec 02 2019 1800"));
     }
 
     @Test
     public void parseTask_eventCommand_createsEventWithTimeRange() {
-        Task task = parser.parseTask("event project meeting /from 2025-01-01 14:00 /to 16:00");
+        Task task = parser.parseTask("event project meeting /from 2025-01-01 14:00 /to 2025-01-01 16:00");
 
         Event event = assertInstanceOf(Event.class, task);
         assertEquals("project meeting", event.getDescription());
-        assertEquals("2025-01-01 14:00", event.getFromText());
-        assertEquals("16:00", event.getToText());
+        assertEquals(LocalDateTime.of(2025, 1, 1, 14, 0), event.getFrom());
+        assertEquals(LocalDateTime.of(2025, 1, 1, 16, 0), event.getTo());
     }
 
     @Test

@@ -1,5 +1,6 @@
 package anders.task;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -8,24 +9,28 @@ import java.time.format.DateTimeParseException;
 public class Event extends Task {
     private final LocalDateTime from;
     private final LocalDateTime to;
-    private final String originalFrom;
-    private final String originalTo;
-    private static final DateTimeFormatter INPUT_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private final boolean fromHasTime;
+    private final boolean toHasTime;
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE;
+    private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm");
+    private static final DateTimeFormatter LEGACY_DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     private static final DateTimeFormatter DISPLAY_FORMAT = DateTimeFormatter.ofPattern("MMM dd yyyy HH:mm");
 
     /**
      * Creates a new unfinished event task.
      *
      * @param description the task description
-     * @param from the event start time, kept as entered by the user
-     * @param to the event end time, kept as entered by the user
+     * @param from the event start date/time in yyyy-MM-dd or yyyy-MM-dd HHmm format
+     * @param to the event end date/time in yyyy-MM-dd or yyyy-MM-dd HHmm format
      */
     public Event(String description, String from, String to) {
         super(description);
-        this.from = parseDateTime(from);
-        this.to = parseDateTime(to);
-        this.originalFrom = from;
-        this.originalTo = to;
+        ParsedDateTime parsedFrom = parseDateTime(from);
+        ParsedDateTime parsedTo = parseDateTime(to);
+        this.from = parsedFrom.value;
+        this.to = parsedTo.value;
+        this.fromHasTime = parsedFrom.hasTime;
+        this.toHasTime = parsedTo.hasTime;
     }
 
     /** @return the event start text */
@@ -41,26 +46,37 @@ public class Event extends Task {
     /** Returns the display text for this event task. */
     @Override
     public String toString() {
-        String fromText = from == null ? originalFrom : from.format(DISPLAY_FORMAT);
-        String toText = to == null ? originalTo : to.format(DISPLAY_FORMAT);
+        String fromText = formatForDisplay(from, fromHasTime);
+        String toText = formatForDisplay(to, toHasTime);
         return "[E] " + super.toString() + " (from: " + fromText + " to: " + toText + ")";
     }
 
-    /** @return the original start value for persistence and legacy free-form times */
+    /** Returns the canonical start value used for persistence. */
     public String getFromText() {
-        return originalFrom;
+        return from.format(fromHasTime ? DATE_TIME_FORMAT : DATE_FORMAT);
     }
 
-    /** @return the original end value for persistence and legacy free-form times */
+    /** Returns the canonical end value used for persistence. */
     public String getToText() {
-        return originalTo;
+        return to.format(toHasTime ? DATE_TIME_FORMAT : DATE_FORMAT);
     }
 
-    private static LocalDateTime parseDateTime(String value) {
+    private static String formatForDisplay(LocalDateTime dateTime, boolean hasTime) {
+        return dateTime.format(hasTime ? DISPLAY_FORMAT : DateTimeFormatter.ofPattern("MMM dd yyyy"));
+    }
+
+    private static ParsedDateTime parseDateTime(String value) {
         try {
-            return LocalDateTime.parse(value, INPUT_FORMAT);
-        } catch (DateTimeParseException ignored) {
-            return null;
+            return new ParsedDateTime(LocalDateTime.parse(value, DATE_TIME_FORMAT), true);
+        } catch (DateTimeParseException e) {
+            try {
+                return new ParsedDateTime(LocalDateTime.parse(value, LEGACY_DATE_TIME_FORMAT), true);
+            } catch (DateTimeParseException legacyFormatError) {
+                return new ParsedDateTime(LocalDate.parse(value, DATE_FORMAT).atStartOfDay(), false);
+            }
         }
+    }
+
+    private record ParsedDateTime(LocalDateTime value, boolean hasTime) {
     }
 }

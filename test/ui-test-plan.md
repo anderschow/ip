@@ -22,9 +22,9 @@ Each test case specifies its aim, commands, and expected output associated with 
     {
       "name": "load saved tasks on startup",
       "aim": "Verify tasks are reconstructed from the save file when Anders starts.",
-      "saved_file": "T | 1 | read book\nD | 0 | return book | June 6th\nE | 0 | project meeting | Aug 6th 2pm | 4pm",
+      "saved_file": "T | 1 | read book\n2|D|0|cmV0dXJuIGJvb2s=|MjAxOS0xMi0wMg==\n2|E|0|cHJvamVjdCBtZWV0aW5n|MjAyNS0wMS0wMSAxNDowMA==|MjAyNS0wMS0wMSAxNjowMA==",
       "commands": ["list", "bye"],
-      "expected": ["1.[T][X] read book", "2.[D][ ] return book (by: June 6th)", "3.[E][ ] project meeting (from: Aug 6th 2-4pm)", "Bye! Keep learning"]
+      "expected": ["1.[T][X] read book", "2.[D][ ] return book (by: Dec 02 2019)", "3.[E][ ] project meeting (from: Jan 01 2025 14:00 to: Jan 01 2025 16:00)", "Bye! Keep learning"]
     },
     {
       "name": "save tasks after changes",
@@ -35,8 +35,8 @@ Each test case specifies its aim, commands, and expected output associated with 
     {
       "name": "add and list all task types",
       "aim": "Verify todo, deadline, event parsing, and polymorphic list display.",
-      "commands": ["todo borrow book", "deadline return book /by Sunday", "event project meeting /from Mon 2pm /to 4pm", "list", "bye"],
-      "expected": ["[T] borrow book", "[D] return book (by: Sunday)", "[E] project meeting (from: Mon 2pm to: 4pm)", "1.[T][ ] borrow book", "Bye! Keep learning"]
+      "commands": ["todo borrow book", "deadline return book /by 2019-12-02", "event project meeting /from 2025-01-01 14:00 /to 2025-01-01 16:00", "list", "bye"],
+      "expected": ["[T] borrow book", "[D] return book (by: Dec 02 2019)", "[E] project meeting (from: Jan 01 2025 14:00 to: Jan 01 2025 16:00)", "1.[T][ ] borrow book", "Bye! Keep learning"]
     },
     {
       "name": "parse and format ISO deadline dates",
@@ -59,8 +59,8 @@ Each test case specifies its aim, commands, and expected output associated with 
     {
       "name": "invalid deadline and event do not alter state",
       "aim": "Verify malformed deadline and event commands do not create phantom tasks between valid tasks.",
-      "commands": ["deadline valid deadline /by Friday", "deadline missing by", "event valid event /from 2pm /to 3pm", "event missing times", "list", "bye"],
-      "expected": ["Now you have 1 tasks in the list.", "OOPS!!! A deadline needs a description and a /by value.", "Now you have 2 tasks in the list.", "OOPS!!! An event needs a description, /from value, and /to value.", "1.[D][ ] valid deadline (by: Friday)", "Bye! Keep learning"]
+      "commands": ["deadline valid deadline /by 2019-12-02", "deadline missing by", "event valid event /from 2025-01-01 14:00 /to 2025-01-01 15:00", "event missing times", "list", "bye"],
+      "expected": ["Now you have 1 tasks in the list.", "OOPS!!! A deadline needs a description and a /by value.", "Now you have 2 tasks in the list.", "OOPS!!! An event needs a description, /from value, and /to value.", "1.[D][ ] valid deadline (by: Dec 02 2019)", "Bye! Keep learning"]
     },
     {
       "name": "invalid mark commands do not alter completion state",
@@ -71,14 +71,14 @@ Each test case specifies its aim, commands, and expected output associated with 
     {
       "name": "delete task and renumber remaining tasks",
       "aim": "Verify a selected task is removed and later tasks shift down in the list.",
-      "commands": ["todo read book", "deadline return book /by June 6th", "event project meeting /from Aug 6th 2pm /to 4pm", "delete 2", "list", "bye"],
-      "expected": ["Now you have 1 tasks in the list.", "Now you have 2 tasks in the list.", "Now you have 3 tasks in the list.", "I've removed this task", "Now you have 2 tasks in the list.", "1.[T][ ] read book", "2.[E][ ] project meeting (from: Aug 6th 2pm to: 4pm)", "Bye! Keep learning"]
+      "commands": ["todo read book", "deadline return book /by 2019-12-02", "event project meeting /from 2025-08-06 14:00 /to 2025-08-06 16:00", "delete 2", "list", "bye"],
+      "expected": ["Now you have 1 tasks in the list.", "Now you have 2 tasks in the list.", "Now you have 3 tasks in the list.", "I've removed this task", "Now you have 2 tasks in the list.", "1.[T][ ] read book", "2.[E][ ] project meeting (from: Aug 06 2025 14:00 to: Aug 06 2025 16:00)", "Bye! Keep learning"]
     },
     {
       "name": "find tasks by keyword",
       "aim": "Verify find displays matching task descriptions with their original list numbers.",
-      "commands": ["todo read book", "deadline return book /by June 6th", "todo revise notes", "find BOOK", "bye"],
-      "expected": ["1.[T][ ] read book", "2.[D][ ] return book (by: June 6th)", "Bye! Keep learning"]
+      "commands": ["todo read book", "deadline return book /by 2019-12-02", "todo revise notes", "find BOOK", "bye"],
+      "expected": ["1.[T][ ] read book", "2.[D][ ] return book (by: Dec 02 2019)", "Bye! Keep learning"]
     }
   ]
 }
