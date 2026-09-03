@@ -25,11 +25,15 @@ public class Storage {
     /** Loads valid tasks from the file, ignoring malformed records. */
     public List<Task> load() {
         List<Task> tasks = new ArrayList<>();
-        if (!Files.exists(file)) return tasks;
+        if (!Files.exists(file)) {
+            return tasks;
+        }
         try {
             for (String line : Files.readAllLines(file, StandardCharsets.UTF_8)) {
                 Task task = parse(line);
-                if (task != null) tasks.add(task);
+                if (task != null) {
+                    tasks.add(task);
+                }
             }
         } catch (IOException | SecurityException e) {
             // Ignore unreadable storage and start with no tasks.
@@ -44,8 +48,12 @@ public class Storage {
             Task task = tasks.get(i);
             String type = task instanceof Deadline ? "D" : task instanceof Event ? "E" : "T";
             String line = "2|" + type + "|" + (task.isDone() ? "1" : "0") + "|" + encode(task.getDescription());
-            if (task instanceof Deadline d) line += "|" + encode(d.getByText());
-            if (task instanceof Event e) line += "|" + encode(e.getFromText()) + "|" + encode(e.getToText());
+            if (task instanceof Deadline d) {
+                line += "|" + encode(d.getByText());
+            }
+            if (task instanceof Event e) {
+                line += "|" + encode(e.getFromText()) + "|" + encode(e.getToText());
+            }
             lines.add(line);
         }
         try {
@@ -60,24 +68,35 @@ public class Storage {
 
     /** Converts one saved record into a task, or returns {@code null} if invalid. */
     private static Task parse(String line) {
-        if (line == null || line.trim().isEmpty()) return null;
+        if (line == null || line.trim().isEmpty()) {
+            return null;
+        }
         try {
             String[] f = line.split("\\|", -1);
             Task task;
             if (f.length >= 4 && f[0].equals("2")) {
-                if (!f[2].equals("0") && !f[2].equals("1")) return null;
+                if (!f[2].equals("0") && !f[2].equals("1")) {
+                    return null;
+                }
                 task = f[1].equals("T") && f.length == 4 ? new Todo(decode(f[3]))
                         : f[1].equals("D") && f.length == 5 ? new Deadline(decode(f[3]), decode(f[4]))
-                        : f[1].equals("E") && f.length == 6 ? new Event(decode(f[3]), decode(f[4]), decode(f[5])) : null;
-                if (task != null && f[2].equals("1")) task.markAsDone();
+                        : f[1].equals("E") && f.length == 6
+                        ? new Event(decode(f[3]), decode(f[4]), decode(f[5])) : null;
+                if (task != null && f[2].equals("1")) {
+                    task.markAsDone();
+                }
                 return task;
             }
             f = line.split("\\s*\\|\\s*", -1);
-            if (f.length < 3 || !(f[1].equals("0") || f[1].equals("1"))) return null;
+            if (f.length < 3 || !(f[1].equals("0") || f[1].equals("1"))) {
+                return null;
+            }
             task = f[0].equals("T") && f.length == 3 ? new Todo(f[2])
                     : f[0].equals("D") && f.length == 4 ? new Deadline(f[2], f[3])
                     : f[0].equals("E") && f.length == 5 ? new Event(f[2], f[3], f[4]) : null;
-            if (task != null && f[1].equals("1")) task.markAsDone();
+            if (task != null && f[1].equals("1")) {
+                task.markAsDone();
+            }
             return task;
         } catch (IllegalArgumentException e) {
             return null;

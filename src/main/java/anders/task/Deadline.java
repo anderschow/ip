@@ -7,12 +7,12 @@ import java.time.format.DateTimeParseException;
 
 /** Represents a task that must be completed by a specified time. */
 public class Deadline extends Task {
-    private final LocalDateTime by;
-    private final boolean hasTime;
-    private final DateTimeFormatter persistenceFormat;
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("d/M/yyyy");
     private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("d/M/yyyy HHmm");
     private static final DateTimeFormatter DISPLAY_FORMAT = DateTimeFormatter.ofPattern("MMM dd yyyy");
+    private final LocalDateTime by;
+    private final boolean hasTime;
+    private final DateTimeFormatter persistenceFormat;
 
     /**
      * Creates a new unfinished deadline task.
@@ -52,7 +52,8 @@ public class Deadline extends Task {
     /** Returns the display text for this deadline task. */
     @Override
     public String toString() {
-        String display = by.format(DISPLAY_FORMAT) + (hasTime ? " " + by.format(DateTimeFormatter.ofPattern("HHmm")) : "");
+        String display = by.format(DISPLAY_FORMAT)
+                + (hasTime ? " " + by.format(DateTimeFormatter.ofPattern("HHmm")) : "");
         return "[D] " + super.toString() + " (by: " + display + ")";
     }
 

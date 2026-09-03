@@ -29,7 +29,11 @@ public class Ui {
     /** Prints the startup greeting. */
     public void showWelcome() {
         System.out.println("____________________________________________________________");
-        System.out.println("    _                 _                \n   / \\   _ __   _| | ___ _ __ ___\n  / _ \\ | '_ \\ / _` |/ _ \\ '__/ __|\n / ___ \\| | | | (_| |  __/ |  \\__ \\\n/_/   \\_\\_| |_|\\__,_|\\___|_|  |___/");
+        System.out.println("    _                 _                \n"
+                + "   / \\   _ __   _| | ___ _ __ ___\n"
+                + "  / _ \\ | '_ \\ / _` |/ _ \\ '__/ __|\n"
+                + " / ___ \\| | | | (_| |  __/ |  \\__ \\\n"
+                + "/_/   \\_\\_| |_|\\__,_|\\___|_|  |___/");
         System.out.println("Hello! I'm Anders, your friendly study companion.");
         System.out.println("What can I do for you today?");
         showSeparator();

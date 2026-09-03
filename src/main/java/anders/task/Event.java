@@ -7,14 +7,14 @@ import java.time.format.DateTimeParseException;
 
 /** Represents a task scheduled between a start time and an end time. */
 public class Event extends Task {
-    private final LocalDateTime from;
-    private final LocalDateTime to;
-    private final boolean fromHasTime;
-    private final boolean toHasTime;
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE;
     private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm");
     private static final DateTimeFormatter LEGACY_DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     private static final DateTimeFormatter DISPLAY_FORMAT = DateTimeFormatter.ofPattern("MMM dd yyyy HH:mm");
+    private final LocalDateTime from;
+    private final LocalDateTime to;
+    private final boolean fromHasTime;
+    private final boolean toHasTime;
 
     /**
      * Creates a new unfinished event task.

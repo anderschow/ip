@@ -86,8 +86,9 @@ public class Parser {
         if (command.equals("deadline") || command.startsWith("deadline ")
                 && (!command.substring(9).contains(" /by ")
                 || command.substring(9, command.indexOf(" /by ")).trim().isEmpty()
-                || command.substring(command.indexOf(" /by ") + 5).trim().isEmpty()))
+                || command.substring(command.indexOf(" /by ") + 5).trim().isEmpty())) {
             throw new AndersException("A deadline needs a description and a /by value.");
+        }
         if (command.startsWith("deadline ")) {
             try {
                 parseTask(command);
@@ -96,8 +97,9 @@ public class Parser {
             }
         }
         if (command.equals("event") || command.startsWith("event ")
-                && !validEvent(command.substring(6)))
+                && !validEvent(command.substring(6))) {
             throw new AndersException("An event needs a description, /from value, and /to value.");
+        }
         if (command.startsWith("event ")) {
             try {
                 parseTask(command);
@@ -105,17 +107,23 @@ public class Parser {
                 throw new AndersException("Event dates must use yyyy-MM-dd or yyyy-MM-dd HHmm format.");
             }
         }
-        if (command.equals("mark") || command.matches("mark\\s+"))
+        if (command.equals("mark") || command.matches("mark\\s+")) {
             throw new AndersException("Mark needs a task number.");
-        if (command.equals("unmark") || command.matches("unmark\\s+"))
+        }
+        if (command.equals("unmark") || command.matches("unmark\\s+")) {
             throw new AndersException("Unmark needs a task number.");
-        if (command.equals("delete") || command.matches("delete\\s+"))
+        }
+        if (command.equals("delete") || command.matches("delete\\s+")) {
             throw new AndersException("Delete needs a task number.");
-        if (command.equals("find") || command.matches("find\\s+"))
+        }
+        if (command.equals("find") || command.matches("find\\s+")) {
             throw new AndersException("Find needs a keyword.");
+        }
         boolean known = command.equals("bye") || command.equals("list")
                 || command.matches("(mark|unmark|delete|find|todo|deadline|event)\\s+.+");
-        if (!known) throw new AndersException("I don't know what that means. Please try a supported command.");
+        if (!known) {
+            throw new AndersException("I don't know what that means. Please try a supported command.");
+        }
     }
 
     /** Checks that an event contains non-empty {@code /from} and {@code /to} values. */

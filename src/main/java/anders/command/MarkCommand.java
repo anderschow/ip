@@ -1,6 +1,5 @@
 package anders.command;
 
-import anders.AndersException;
 import anders.collection.TaskList;
 import anders.storage.Storage;
 import anders.ui.Ui;
