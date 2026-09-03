@@ -4,12 +4,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Locale;
 
 /** Represents a task that must be completed by a specified time. */
 public class Deadline extends Task {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("d/M/yyyy");
     private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("d/M/yyyy HHmm");
     private static final DateTimeFormatter DISPLAY_FORMAT = DateTimeFormatter.ofPattern("MMM dd yyyy");
+    private static final DateTimeFormatter DISPLAY_TIME_FORMAT = DateTimeFormatter.ofPattern("h.mm a", Locale.ENGLISH);
     private final LocalDateTime by;
     private final boolean hasTime;
     private final DateTimeFormatter persistenceFormat;
@@ -52,8 +54,8 @@ public class Deadline extends Task {
     /** Returns the display text for this deadline task. */
     @Override
     public String toString() {
-        String display = by.format(DISPLAY_FORMAT)
-                + (hasTime ? " " + by.format(DateTimeFormatter.ofPattern("HHmm")) : "");
+        String time = by.format(DISPLAY_TIME_FORMAT).toLowerCase(Locale.ROOT);
+        String display = by.format(DISPLAY_FORMAT) + (hasTime ? " " + time : "");
         return "[D] " + super.toString() + " (by: " + display + ")";
     }
 

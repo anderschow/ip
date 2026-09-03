@@ -37,7 +37,7 @@ public class ParserTest {
         assertEquals("return book", deadline.getDescription());
         assertEquals(LocalDateTime.of(2019, 12, 2, 18, 0), deadline.getBy());
         assertEquals("2/12/2019 1800", deadline.getByText());
-        assertEquals(true, deadline.toString().contains("Dec 02 2019 1800"));
+        assertEquals(true, deadline.toString().contains("Dec 02 2019 6.00 pm"));
     }
 
     @Test

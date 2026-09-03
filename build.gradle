@@ -19,6 +19,13 @@ repositories {
 }
 
 dependencies {
+    String javaFxVersion = '17.0.7'
+
+    implementation "org.openjfx:javafx-base:${javaFxVersion}:win"
+    implementation "org.openjfx:javafx-controls:${javaFxVersion}:win"
+    implementation "org.openjfx:javafx-fxml:${javaFxVersion}:win"
+    implementation "org.openjfx:javafx-graphics:${javaFxVersion}:win"
+
     String jUnitVersion = '5.14.4'
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:${jUnitVersion}"
@@ -42,7 +49,7 @@ test {
 }
 
 application {
-    mainClass = 'anders.Anders'
+    mainClass = 'anders.Launcher'
 }
 
 jar {
