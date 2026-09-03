@@ -88,4 +88,11 @@ public class TaskTest {
 
         assertEquals("read book", task.toString());
     }
+
+    @Test
+    public void toString_deadlineWithTime_usesTwelveHourClock() {
+        Deadline deadline = new Deadline("read notes", "5/9/2026 2030");
+
+        assertTrue(deadline.toString().contains("8.30 pm"));
+    }
 }
