@@ -25,11 +25,11 @@ public class Deadline extends Task {
     public Deadline(String description, String by) {
         super(description);
         LocalDateTime parsedDateTime;
-        boolean containsTime;
+        boolean hasTime;
         DateTimeFormatter format;
         try {
             parsedDateTime = LocalDateTime.parse(by, DATE_TIME_FORMAT);
-            containsTime = true;
+            hasTime = true;
             format = DATE_TIME_FORMAT;
         } catch (DateTimeParseException e) {
             format = DATE_FORMAT;
@@ -39,10 +39,10 @@ public class Deadline extends Task {
                 format = DateTimeFormatter.ISO_LOCAL_DATE;
                 parsedDateTime = LocalDate.parse(by, format).atStartOfDay();
             }
-            containsTime = false;
+            hasTime = false;
         }
         this.by = parsedDateTime;
-        this.hasTime = containsTime;
+        this.hasTime = hasTime;
         this.persistenceFormat = format;
     }
 

@@ -6,19 +6,19 @@ import anders.ui.Ui;
 
 /** Changes the completion state of a selected task. */
 public class MarkCommand extends Command {
-    private final String taskNumber;
+    private final String taskNumberText;
     private final boolean done;
 
     /** Creates a mark or unmark command. */
-    public MarkCommand(String taskNumber, boolean done) {
-        this.taskNumber = taskNumber;
+    public MarkCommand(String taskNumberText, boolean done) {
+        this.taskNumberText = taskNumberText;
         this.done = done;
     }
     /** Updates the selected task's completion state and saves the task list. */
     @Override
     public void execute(TaskList tasks, Ui ui, Storage storage) {
         try {
-            int index = Integer.parseInt(taskNumber) - 1;
+            int index = Integer.parseInt(taskNumberText) - 1;
             if (index < 0 || index >= tasks.size()) {
                 ui.showInvalidTaskNumber(tasks.size());
                 return;

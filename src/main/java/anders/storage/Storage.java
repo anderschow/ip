@@ -1,4 +1,5 @@
 package anders.storage;
+
 import anders.collection.TaskList;
 import anders.task.Deadline;
 import anders.task.Event;
@@ -72,29 +73,31 @@ public class Storage {
             return null;
         }
         try {
-            String[] f = line.split("\\|", -1);
+            String[] fields = line.split("\\|", -1);
             Task task;
-            if (f.length >= 4 && f[0].equals("2")) {
-                if (!f[2].equals("0") && !f[2].equals("1")) {
+            if (fields.length >= 4 && fields[0].equals("2")) {
+                if (!fields[2].equals("0") && !fields[2].equals("1")) {
                     return null;
                 }
-                task = f[1].equals("T") && f.length == 4 ? new Todo(decode(f[3]))
-                        : f[1].equals("D") && f.length == 5 ? new Deadline(decode(f[3]), decode(f[4]))
-                        : f[1].equals("E") && f.length == 6
-                        ? new Event(decode(f[3]), decode(f[4]), decode(f[5])) : null;
-                if (task != null && f[2].equals("1")) {
+                task = fields[1].equals("T") && fields.length == 4 ? new Todo(decode(fields[3]))
+                        : fields[1].equals("D") && fields.length == 5
+                        ? new Deadline(decode(fields[3]), decode(fields[4]))
+                        : fields[1].equals("E") && fields.length == 6
+                        ? new Event(decode(fields[3]), decode(fields[4]), decode(fields[5])) : null;
+                if (task != null && fields[2].equals("1")) {
                     task.markAsDone();
                 }
                 return task;
             }
-            f = line.split("\\s*\\|\\s*", -1);
-            if (f.length < 3 || !(f[1].equals("0") || f[1].equals("1"))) {
+            fields = line.split("\\s*\\|\\s*", -1);
+            if (fields.length < 3 || !(fields[1].equals("0") || fields[1].equals("1"))) {
                 return null;
             }
-            task = f[0].equals("T") && f.length == 3 ? new Todo(f[2])
-                    : f[0].equals("D") && f.length == 4 ? new Deadline(f[2], f[3])
-                    : f[0].equals("E") && f.length == 5 ? new Event(f[2], f[3], f[4]) : null;
-            if (task != null && f[1].equals("1")) {
+            task = fields[0].equals("T") && fields.length == 3 ? new Todo(fields[2])
+                    : fields[0].equals("D") && fields.length == 4 ? new Deadline(fields[2], fields[3])
+                    : fields[0].equals("E") && fields.length == 5
+                    ? new Event(fields[2], fields[3], fields[4]) : null;
+            if (task != null && fields[1].equals("1")) {
                 task.markAsDone();
             }
             return task;

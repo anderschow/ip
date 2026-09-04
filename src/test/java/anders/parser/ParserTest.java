@@ -3,9 +3,11 @@ package anders.parser;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import anders.AndersException;
 import anders.command.AddCommand;
+import anders.command.Command;
 import anders.command.ExitCommand;
 import anders.command.FindCommand;
 import anders.command.MarkCommand;
@@ -67,6 +69,14 @@ public class ParserTest {
     }
 
     @Test
+    public void parse_commandWithExtraWhitespace_acceptsCommand() throws AndersException {
+        String input = "  event   project meeting   /from   2025-01-01 14:00   /to   2025-01-01 16:00  ";
+        Command command = Parser.parse(input);
+
+        assertInstanceOf(AddCommand.class, command);
+    }
+
+    @Test
     public void validate_invalidCommands_throwHelpfulExceptions() {
         assertThrows(AndersException.class, () -> parser.validate(""));
         assertThrows(AndersException.class, () -> parser.validate("todo"));
@@ -74,5 +84,13 @@ public class ParserTest {
         assertThrows(AndersException.class, () -> parser.validate("event meeting /from 2pm"));
         assertThrows(AndersException.class, () -> parser.validate("unknown command"));
         assertThrows(AndersException.class, () -> parser.validate("find"));
+    }
+
+    @Test
+    public void validate_invalidDeadline_hasHelpfulFormatMessage() {
+        AndersException exception = assertThrows(AndersException.class,
+                () -> parser.validate("deadline return book /by tomorrow"));
+
+        assertTrue(exception.getMessage().contains("d/M/yyyy"));
     }
 }

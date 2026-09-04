@@ -5,6 +5,7 @@ import anders.task.Deadline;
 import anders.task.Event;
 import anders.task.Task;
 
+import java.util.Locale;
 import java.util.Scanner;
 
 /** Handles console input for Anders. */
@@ -28,7 +29,7 @@ public class Ui {
 
     /** Prints the startup greeting. */
     public void showWelcome() {
-        System.out.println("____________________________________________________________");
+        showSeparator();
         System.out.println("    _                 _                \n"
                 + "   / \\   _ __   _| | ___ _ __ ___\n"
                 + "  / _ \\ | '_ \\ / _` |/ _ \\ '__/ __|\n"
@@ -62,15 +63,20 @@ public class Ui {
         }
     }
 
-    /** Displays tasks whose descriptions contain the supplied keyword. */
+    /** Displays tasks whose descriptions contain the supplied keyword, or a no-match message. */
     public void showMatchingTasks(TaskList tasks, String keyword) {
         System.out.println("     Here are the matching tasks in your list:");
-        String searchText = keyword.toLowerCase();
+        String searchText = keyword.toLowerCase(Locale.ROOT);
+        boolean hasMatch = false;
         for (int i = 0; i < tasks.size(); i++) {
             Task task = tasks.get(i);
-            if (task.getDescription().toLowerCase().contains(searchText)) {
+            if (task.getDescription().toLowerCase(Locale.ROOT).contains(searchText)) {
+                hasMatch = true;
                 System.out.println("     " + (i + 1) + "." + formatTask(task));
             }
+        }
+        if (!hasMatch) {
+            System.out.println("     No matching tasks found.");
         }
     }
 

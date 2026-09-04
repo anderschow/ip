@@ -11,7 +11,6 @@ public class Event extends Task {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE;
     private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm");
     private static final DateTimeFormatter LEGACY_DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-    private static final DateTimeFormatter DISPLAY_FORMAT = DateTimeFormatter.ofPattern("MMM dd yyyy HH:mm");
     private static final DateTimeFormatter INPUT_DATE_FORMAT = DateTimeFormatter.ofPattern("d/M/yyyy");
     private static final DateTimeFormatter INPUT_DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("d/M/yyyy HHmm");
     private static final DateTimeFormatter DISPLAY_DATE_FORMAT = DateTimeFormatter.ofPattern("MMM dd yyyy");
@@ -38,12 +37,12 @@ public class Event extends Task {
         this.toHasTime = parsedTo.hasTime;
     }
 
-    /** @return the event start text */
+    /** @return the event start date and time */
     public LocalDateTime getFrom() {
         return from;
     }
 
-    /** @return the event end text */
+    /** @return the event end date and time */
     public LocalDateTime getTo() {
         return to;
     }

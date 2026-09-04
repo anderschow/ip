@@ -13,9 +13,14 @@ import anders.task.Event;
 import anders.task.Task;
 import anders.task.Todo;
 import java.time.format.DateTimeParseException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** Validates the command formats accepted by Anders. */
 public class Parser {
+    private static final Pattern DEADLINE_PATTERN = Pattern.compile("(.+?)\\s+/by\\s+(.+)");
+    private static final Pattern EVENT_PATTERN = Pattern.compile("(.+?)\\s+/from\\s+(.+?)\\s+/to\\s+(.+)");
+
     /** Converts a validated command string into an executable command object. */
     public static Command parse(String command) throws AndersException {
         Parser parser = new Parser();
@@ -45,14 +50,16 @@ public class Parser {
     }
     /** Returns the command keyword, separated from its arguments. */
     public String commandWord(String command) {
-        int separator = command.indexOf(' ');
-        return separator < 0 ? command : command.substring(0, separator);
+        String trimmedCommand = command.trim();
+        int separator = firstWhitespaceIndex(trimmedCommand);
+        return separator < 0 ? trimmedCommand : trimmedCommand.substring(0, separator);
     }
 
     /** Returns the text following the command keyword. */
     public String arguments(String command) {
-        int separator = command.indexOf(' ');
-        return separator < 0 ? "" : command.substring(separator + 1).trim();
+        String trimmedCommand = command.trim();
+        int separator = firstWhitespaceIndex(trimmedCommand);
+        return separator < 0 ? "" : trimmedCommand.substring(separator).trim();
     }
 
     /** Builds a task from a validated task-creation command. */
@@ -61,77 +68,113 @@ public class Parser {
         switch (commandWord(command)) {
         case "todo":
             return new Todo(details);
-        case "deadline":
-            int by = details.indexOf(" /by ");
-            return new Deadline(details.substring(0, by).trim(),
-                    details.substring(by + " /by ".length()).trim());
-        case "event":
-            int from = details.indexOf(" /from ");
-            int to = details.indexOf(" /to ");
-            return new Event(details.substring(0, from).trim(),
-                    details.substring(from + " /from ".length(), to).trim(),
-                    details.substring(to + " /to ".length()).trim());
+        case "deadline": {
+            Matcher deadlineMatcher = DEADLINE_PATTERN.matcher(details);
+            if (!deadlineMatcher.matches()) {
+                throw new IllegalArgumentException("Invalid deadline format");
+            }
+            return new Deadline(deadlineMatcher.group(1).trim(), deadlineMatcher.group(2).trim());
+        }
+        case "event": {
+            Matcher eventMatcher = EVENT_PATTERN.matcher(details);
+            if (!eventMatcher.matches()) {
+                throw new IllegalArgumentException("Invalid event format");
+            }
+            return new Event(eventMatcher.group(1).trim(), eventMatcher.group(2).trim(),
+                    eventMatcher.group(3).trim());
+        }
         default:
             throw new IllegalArgumentException("Command does not create a task");
         }
     }
-    /** Throws an exception when the command is empty, malformed, or unsupported. */
+
+    /** Validates that a command is non-empty, well-formed, and supported. */
     public void validate(String command) throws AndersException {
-        if (command.isEmpty()) {
+        String trimmedCommand = command.trim();
+        if (trimmedCommand.isEmpty()) {
             throw new AndersException("I don't know what that means. Please enter a command.");
         }
-        if (command.equals("todo") || command.matches("todo\\s+")) {
-            throw new AndersException("The description of a todo cannot be empty. Please include a description!");
-        }
-        if (command.equals("deadline") || command.startsWith("deadline ")
-                && (!command.substring(9).contains(" /by ")
-                || command.substring(9, command.indexOf(" /by ")).trim().isEmpty()
-                || command.substring(command.indexOf(" /by ") + 5).trim().isEmpty())) {
-            throw new AndersException("A deadline needs a description and a /by value.");
-        }
-        if (command.startsWith("deadline ")) {
-            try {
-                parseTask(command);
-            } catch (DateTimeParseException e) {
-                throw new AndersException("A deadline must use d/M/yyyy or d/M/yyyy HHmm format.");
+        String word = commandWord(trimmedCommand);
+        String args = arguments(trimmedCommand);
+        switch (word) {
+        case "todo":
+            if (args.isEmpty()) {
+                throw new AndersException("The description of a todo cannot be empty. Please include a description!");
             }
-        }
-        if (command.equals("event") || command.startsWith("event ")
-                && !validEvent(command.substring(6))) {
-            throw new AndersException("An event needs a description, /from value, and /to value.");
-        }
-        if (command.startsWith("event ")) {
-            try {
-                parseTask(command);
-            } catch (DateTimeParseException e) {
-                throw new AndersException("Event dates must use yyyy-MM-dd or yyyy-MM-dd HHmm format.");
+            break;
+        case "deadline":
+            if (!isValidDeadline(args)) {
+                throw new AndersException("A deadline needs a description and a /by value.");
             }
-        }
-        if (command.equals("mark") || command.matches("mark\\s+")) {
-            throw new AndersException("Mark needs a task number.");
-        }
-        if (command.equals("unmark") || command.matches("unmark\\s+")) {
-            throw new AndersException("Unmark needs a task number.");
-        }
-        if (command.equals("delete") || command.matches("delete\\s+")) {
-            throw new AndersException("Delete needs a task number.");
-        }
-        if (command.equals("find") || command.matches("find\\s+")) {
-            throw new AndersException("Find needs a keyword.");
-        }
-        boolean known = command.equals("bye") || command.equals("list")
-                || command.matches("(mark|unmark|delete|find|todo|deadline|event)\\s+.+");
-        if (!known) {
+            try {
+                parseTask(trimmedCommand);
+            } catch (DateTimeParseException e) {
+                throw new AndersException("A deadline must use d/M/yyyy, d/M/yyyy HHmm, or yyyy-MM-dd format.");
+            }
+            break;
+        case "event":
+            if (!isValidEvent(args)) {
+                throw new AndersException("An event needs a description, /from value, and /to value.");
+            }
+            try {
+                parseTask(trimmedCommand);
+            } catch (DateTimeParseException e) {
+                throw new AndersException("Event dates must use yyyy-MM-dd or d/M/yyyy, optionally followed by HHmm.");
+            }
+            break;
+        case "mark":
+            if (args.isEmpty()) {
+                throw new AndersException("Mark needs a task number.");
+            }
+            break;
+        case "unmark":
+            if (args.isEmpty()) {
+                throw new AndersException("Unmark needs a task number.");
+            }
+            break;
+        case "delete":
+            if (args.isEmpty()) {
+                throw new AndersException("Delete needs a task number.");
+            }
+            break;
+        case "find":
+            if (args.isEmpty()) {
+                throw new AndersException("Find needs a keyword.");
+            }
+            break;
+        case "bye":
+        case "list":
+            if (!args.isEmpty()) {
+                throw new AndersException("I don't know what that means. Please try a supported command.");
+            }
+            break;
+        default:
             throw new AndersException("I don't know what that means. Please try a supported command.");
         }
     }
 
+    private boolean isValidDeadline(String details) {
+        Matcher deadlineMatcher = DEADLINE_PATTERN.matcher(details);
+        return deadlineMatcher.matches()
+                && !deadlineMatcher.group(1).trim().isEmpty()
+                && !deadlineMatcher.group(2).trim().isEmpty();
+    }
+
     /** Checks that an event contains non-empty {@code /from} and {@code /to} values. */
-    private boolean validEvent(String details) {
-        int from = details.indexOf(" /from ");
-        int to = details.indexOf(" /to ");
-        return from > 0 && to > from
-                && !details.substring(from + 7, to).trim().isEmpty()
-                && !details.substring(to + 5).trim().isEmpty();
+    private boolean isValidEvent(String details) {
+        Matcher eventMatcher = EVENT_PATTERN.matcher(details);
+        return eventMatcher.matches()
+                && !eventMatcher.group(1).trim().isEmpty()
+                && !eventMatcher.group(2).trim().isEmpty()
+                && !eventMatcher.group(3).trim().isEmpty();
+    }
+
+    private static int firstWhitespaceIndex(String command) {
+        for (int i = 0; i < command.length(); i++) {
+            if (Character.isWhitespace(command.charAt(i))) {
+                return i;
+            }
+        }
+        return -1;
     }
 }
