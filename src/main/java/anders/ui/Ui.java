@@ -1,12 +1,12 @@
 package anders.ui;
 
+import java.util.Locale;
+import java.util.Scanner;
+
 import anders.collection.TaskList;
 import anders.task.Deadline;
 import anders.task.Event;
 import anders.task.Task;
-
-import java.util.Locale;
-import java.util.Scanner;
 
 /** Handles console input for Anders. */
 public class Ui {

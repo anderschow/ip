@@ -1,9 +1,9 @@
 package anders.collection;
 
-import anders.task.Task;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import anders.task.Task;
 
 /**
  * Stores the tasks currently known to Anders and provides list operations.

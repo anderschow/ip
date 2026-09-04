@@ -5,6 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.LocalDateTime;
+
+import org.junit.jupiter.api.Test;
+
 import anders.AndersException;
 import anders.command.AddCommand;
 import anders.command.Command;
@@ -15,8 +19,6 @@ import anders.task.Deadline;
 import anders.task.Event;
 import anders.task.Task;
 import anders.task.Todo;
-import org.junit.jupiter.api.Test;
-import java.time.LocalDateTime;
 
 /** Tests command parsing and validation, which drive Anders' core input flow. */
 public class ParserTest {
@@ -88,8 +90,8 @@ public class ParserTest {
 
     @Test
     public void validate_invalidDeadline_hasHelpfulFormatMessage() {
-        AndersException exception = assertThrows(AndersException.class,
-                () -> parser.validate("deadline return book /by tomorrow"));
+        AndersException exception = assertThrows(AndersException.class, () ->
+                parser.validate("deadline return book /by tomorrow"));
 
         assertTrue(exception.getMessage().contains("d/M/yyyy"));
     }

@@ -1,10 +1,5 @@
 package anders.storage;
 
-import anders.collection.TaskList;
-import anders.task.Deadline;
-import anders.task.Event;
-import anders.task.Task;
-import anders.task.Todo;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -13,6 +8,12 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+
+import anders.collection.TaskList;
+import anders.task.Deadline;
+import anders.task.Event;
+import anders.task.Task;
+import anders.task.Todo;
 
 /** Handles loading tasks from and saving tasks to a file. */
 public class Storage {

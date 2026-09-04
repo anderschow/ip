@@ -1,12 +1,13 @@
 package anders;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+
 import anders.collection.TaskList;
 import anders.command.Command;
 import anders.parser.Parser;
 import anders.storage.Storage;
 import anders.ui.Ui;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 
 /**
  * The entry point for the Anders chatbot.

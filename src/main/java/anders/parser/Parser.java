@@ -1,5 +1,9 @@
 package anders.parser;
 
+import java.time.format.DateTimeParseException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import anders.AndersException;
 import anders.command.AddCommand;
 import anders.command.Command;
@@ -12,9 +16,6 @@ import anders.task.Deadline;
 import anders.task.Event;
 import anders.task.Task;
 import anders.task.Todo;
-import java.time.format.DateTimeParseException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /** Validates the command formats accepted by Anders. */
 public class Parser {
@@ -28,24 +29,24 @@ public class Parser {
         String word = parser.commandWord(command);
         String args = parser.arguments(command);
         switch (word) {
-        case "bye":
-            return new ExitCommand();
-        case "list":
-            return new ListCommand();
-        case "mark":
-            return new MarkCommand(args, true);
-        case "unmark":
-            return new MarkCommand(args, false);
-        case "delete":
-            return new DeleteCommand(args);
-        case "find":
-            return new FindCommand(args);
-        case "todo":
-        case "deadline":
-        case "event":
-            return new AddCommand(parser.parseTask(command));
-        default:
-            throw new AndersException("I don't know what that means. Please try a supported command.");
+            case "bye":
+                return new ExitCommand();
+            case "list":
+                return new ListCommand();
+            case "mark":
+                return new MarkCommand(args, true);
+            case "unmark":
+                return new MarkCommand(args, false);
+            case "delete":
+                return new DeleteCommand(args);
+            case "find":
+                return new FindCommand(args);
+            case "todo":
+            case "deadline":
+            case "event":
+                return new AddCommand(parser.parseTask(command));
+            default:
+                throw new AndersException("I don't know what that means. Please try a supported command.");
         }
     }
     /** Returns the command keyword, separated from its arguments. */
@@ -66,25 +67,25 @@ public class Parser {
     public Task parseTask(String command) {
         String details = arguments(command);
         switch (commandWord(command)) {
-        case "todo":
-            return new Todo(details);
-        case "deadline": {
-            Matcher deadlineMatcher = DEADLINE_PATTERN.matcher(details);
-            if (!deadlineMatcher.matches()) {
-                throw new IllegalArgumentException("Invalid deadline format");
+            case "todo":
+                return new Todo(details);
+            case "deadline": {
+                Matcher deadlineMatcher = DEADLINE_PATTERN.matcher(details);
+                if (!deadlineMatcher.matches()) {
+                    throw new IllegalArgumentException("Invalid deadline format");
+                }
+                return new Deadline(deadlineMatcher.group(1).trim(), deadlineMatcher.group(2).trim());
             }
-            return new Deadline(deadlineMatcher.group(1).trim(), deadlineMatcher.group(2).trim());
-        }
-        case "event": {
-            Matcher eventMatcher = EVENT_PATTERN.matcher(details);
-            if (!eventMatcher.matches()) {
-                throw new IllegalArgumentException("Invalid event format");
+            case "event": {
+                Matcher eventMatcher = EVENT_PATTERN.matcher(details);
+                if (!eventMatcher.matches()) {
+                    throw new IllegalArgumentException("Invalid event format");
+                }
+                return new Event(eventMatcher.group(1).trim(), eventMatcher.group(2).trim(),
+                        eventMatcher.group(3).trim());
             }
-            return new Event(eventMatcher.group(1).trim(), eventMatcher.group(2).trim(),
-                    eventMatcher.group(3).trim());
-        }
-        default:
-            throw new IllegalArgumentException("Command does not create a task");
+            default:
+                throw new IllegalArgumentException("Command does not create a task");
         }
     }
 
@@ -97,59 +98,61 @@ public class Parser {
         String word = commandWord(trimmedCommand);
         String args = arguments(trimmedCommand);
         switch (word) {
-        case "todo":
-            if (args.isEmpty()) {
-                throw new AndersException("The description of a todo cannot be empty. Please include a description!");
-            }
-            break;
-        case "deadline":
-            if (!isValidDeadline(args)) {
-                throw new AndersException("A deadline needs a description and a /by value.");
-            }
-            try {
-                parseTask(trimmedCommand);
-            } catch (DateTimeParseException e) {
-                throw new AndersException("A deadline must use d/M/yyyy, d/M/yyyy HHmm, or yyyy-MM-dd format.");
-            }
-            break;
-        case "event":
-            if (!isValidEvent(args)) {
-                throw new AndersException("An event needs a description, /from value, and /to value.");
-            }
-            try {
-                parseTask(trimmedCommand);
-            } catch (DateTimeParseException e) {
-                throw new AndersException("Event dates must use yyyy-MM-dd or d/M/yyyy, optionally followed by HHmm.");
-            }
-            break;
-        case "mark":
-            if (args.isEmpty()) {
-                throw new AndersException("Mark needs a task number.");
-            }
-            break;
-        case "unmark":
-            if (args.isEmpty()) {
-                throw new AndersException("Unmark needs a task number.");
-            }
-            break;
-        case "delete":
-            if (args.isEmpty()) {
-                throw new AndersException("Delete needs a task number.");
-            }
-            break;
-        case "find":
-            if (args.isEmpty()) {
-                throw new AndersException("Find needs a keyword.");
-            }
-            break;
-        case "bye":
-        case "list":
-            if (!args.isEmpty()) {
+            case "todo":
+                if (args.isEmpty()) {
+                    throw new AndersException("The description of a todo cannot be empty. Please include a "
+                            + "description!");
+                }
+                break;
+            case "deadline":
+                if (!isValidDeadline(args)) {
+                    throw new AndersException("A deadline needs a description and a /by value.");
+                }
+                try {
+                    parseTask(trimmedCommand);
+                } catch (DateTimeParseException e) {
+                    throw new AndersException("A deadline must use d/M/yyyy, d/M/yyyy HHmm, or yyyy-MM-dd format.");
+                }
+                break;
+            case "event":
+                if (!isValidEvent(args)) {
+                    throw new AndersException("An event needs a description, /from value, and /to value.");
+                }
+                try {
+                    parseTask(trimmedCommand);
+                } catch (DateTimeParseException e) {
+                    throw new AndersException("Event dates must use yyyy-MM-dd or d/M/yyyy, optionally followed "
+                            + "by HHmm.");
+                }
+                break;
+            case "mark":
+                if (args.isEmpty()) {
+                    throw new AndersException("Mark needs a task number.");
+                }
+                break;
+            case "unmark":
+                if (args.isEmpty()) {
+                    throw new AndersException("Unmark needs a task number.");
+                }
+                break;
+            case "delete":
+                if (args.isEmpty()) {
+                    throw new AndersException("Delete needs a task number.");
+                }
+                break;
+            case "find":
+                if (args.isEmpty()) {
+                    throw new AndersException("Find needs a keyword.");
+                }
+                break;
+            case "bye":
+            case "list":
+                if (!args.isEmpty()) {
+                    throw new AndersException("I don't know what that means. Please try a supported command.");
+                }
+                break;
+            default:
                 throw new AndersException("I don't know what that means. Please try a supported command.");
-            }
-            break;
-        default:
-            throw new AndersException("I don't know what that means. Please try a supported command.");
         }
     }
 
