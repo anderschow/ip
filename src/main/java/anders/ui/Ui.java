@@ -115,6 +115,9 @@ public class Ui {
     private String formatTask(Task task) {
         String typeIcon = task instanceof Deadline ? "D" : task instanceof Event ? "E" : "T";
         String taskText = task.toString();
-        return "[" + typeIcon + "][" + task.getStatusIcon() + "] " + taskText.substring(4);
+        String typePrefix = "[" + typeIcon + "] ";
+        String displayText = taskText.startsWith(typePrefix)
+                ? taskText.substring(typePrefix.length()) : taskText;
+        return "[" + typeIcon + "][" + task.getStatusIcon() + "] " + displayText;
     }
 }

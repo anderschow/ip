@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import anders.collection.TaskList;
+import anders.task.Deadline;
 import anders.task.Todo;
 
 /** Tests console messages produced by the user interface. */
@@ -36,5 +37,15 @@ public class UiTest {
         new Ui().showMatchingTasks(tasks, "exam");
 
         assertTrue(capturedOutput.toString().contains("No matching tasks found."));
+    }
+
+    @Test
+    public void showTaskList_deadline_preservesTypeAndDescriptionFormatting() {
+        TaskList tasks = new TaskList();
+        tasks.add(new Deadline("return book", "2019-12-02"));
+
+        new Ui().showTaskList(tasks);
+
+        assertTrue(capturedOutput.toString().contains("1.[D][ ] return book (by: Dec 02 2019)"));
     }
 }
