@@ -1,5 +1,6 @@
 package anders.ui;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayOutputStream;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 
 import anders.collection.TaskList;
 import anders.task.Deadline;
+import anders.task.Task;
 import anders.task.Todo;
 
 /** Tests console messages produced by the user interface. */
@@ -47,5 +49,11 @@ public class UiTest {
         new Ui().showTaskList(tasks);
 
         assertTrue(capturedOutput.toString().contains("1.[D][ ] return book (by: Dec 02 2019)"));
+    }
+    public void showTaskList_taskWithoutTypePrefix_failsFastWithAssertion() {
+        TaskList tasks = new TaskList();
+        tasks.add(new Task("plain task"));
+
+        assertThrows(AssertionError.class, () -> new Ui().showTaskList(tasks));
     }
 }

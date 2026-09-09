@@ -39,6 +39,7 @@ public class Event extends Task {
         this.to = parsedTo.value;
         this.fromHasTime = parsedFrom.hasTime;
         this.toHasTime = parsedTo.hasTime;
+        assert !this.from.isAfter(this.to) : "An event must end at or after it starts";
     }
 
     /** @return the event start date and time */

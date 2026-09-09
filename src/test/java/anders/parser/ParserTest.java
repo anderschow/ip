@@ -62,6 +62,9 @@ public class ParserTest {
         assertEquals(LocalDateTime.of(2025, 1, 1, 14, 0), event.getFrom());
         assertEquals(LocalDateTime.of(2025, 1, 1, 16, 0), event.getTo());
     }
+    public void parseTask_nonTaskCommand_failsFastWithAssertion() {
+        assertThrows(AssertionError.class, () -> parser.parseTask("list"));
+    }
 
     @Test
     public void parse_supportedCommands_createsExpectedCommandTypes() throws AndersException {

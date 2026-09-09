@@ -44,6 +44,9 @@ public class Deadline extends Task {
         this.by = parsedDateTime;
         this.hasTime = hasTime;
         this.persistenceFormat = format;
+        assert this.by != null : "A deadline must have a parsed date";
+        assert this.hasTime == (this.persistenceFormat == DATE_TIME_FORMAT)
+                : "Deadline time metadata must match its persistence format";
     }
 
     /** Returns the typed deadline date. */

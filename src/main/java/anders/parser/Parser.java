@@ -46,6 +46,7 @@ public class Parser {
             case "event":
                 return new AddCommand(parser.parseTask(command));
             default:
+                assert false : "Validation must reject unsupported command words";
                 throw new AndersException("I don't know what that means. Please try a supported command.");
         }
     }
@@ -85,6 +86,7 @@ public class Parser {
                         eventMatcher.group(3).trim());
             }
             default:
+                assert false : "parseTask must only receive a task-creation command";
                 throw new IllegalArgumentException("Command does not create a task");
         }
     }

@@ -2,6 +2,7 @@ package anders.task;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -94,5 +95,10 @@ public class TaskTest {
         Deadline deadline = new Deadline("read notes", "5/9/2026 2030");
 
         assertTrue(deadline.toString().contains("8.30 pm"));
+    }
+
+    @Test
+    public void event_endBeforeStart_failsFastWithAssertion() {
+        assertThrows(AssertionError.class, () -> new Event("meeting", "2025-01-01 16:00", "2025-01-01 14:00"));
     }
 }

@@ -113,11 +113,14 @@ public class Ui {
 
     /** Formats a task with its type and completion icons for console display. */
     private String formatTask(Task task) {
+        assert task != null : "The UI can only format an existing task";
         String typeIcon = task instanceof Deadline ? "D" : task instanceof Event ? "E" : "T";
         String taskText = task.toString();
+
         String typePrefix = "[" + typeIcon + "] ";
-        String displayText = taskText.startsWith(typePrefix)
-                ? taskText.substring(typePrefix.length()) : taskText;
-        return "[" + typeIcon + "][" + task.getStatusIcon() + "] " + displayText;
+        assert taskText.startsWith(typePrefix)
+                : "Every displayable task must include its type prefix";
+        return "[" + typeIcon + "][" + task.getStatusIcon() + "] "
+                + taskText.substring(typePrefix.length());
     }
 }
