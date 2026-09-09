@@ -55,6 +55,13 @@ public class ParserTest {
     }
 
     @Test
+    public void parseTask_eventCommand_acceptsSlashDates() {
+        Event event = assertInstanceOf(Event.class,
+                parser.parseTask("event project meeting /from 1/1/2025 1400 /to 1/1/2025 1600"));
+
+        assertEquals(LocalDateTime.of(2025, 1, 1, 14, 0), event.getFrom());
+        assertEquals(LocalDateTime.of(2025, 1, 1, 16, 0), event.getTo());
+    }
     public void parseTask_nonTaskCommand_failsFastWithAssertion() {
         assertThrows(AssertionError.class, () -> parser.parseTask("list"));
     }
@@ -91,6 +98,12 @@ public class ParserTest {
         assertThrows(AndersException.class, () -> parser.validate("event meeting /from 2pm"));
         assertThrows(AndersException.class, () -> parser.validate("unknown command"));
         assertThrows(AndersException.class, () -> parser.validate("find"));
+    }
+
+    @Test
+    public void validate_noArgumentCommands_rejectExtraArguments() {
+        assertThrows(AndersException.class, () -> parser.validate("list extra"));
+        assertThrows(AndersException.class, () -> parser.validate("bye extra"));
     }
 
     @Test

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 import java.util.Locale;
 
 /** Represents a task scheduled between a start time and an end time. */
@@ -15,6 +16,9 @@ public class Event extends Task {
     private static final DateTimeFormatter INPUT_DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("d/M/yyyy HHmm");
     private static final DateTimeFormatter DISPLAY_DATE_FORMAT = DateTimeFormatter.ofPattern("MMM dd yyyy");
     private static final DateTimeFormatter DISPLAY_TIME_FORMAT = DateTimeFormatter.ofPattern("h.mm a", Locale.ENGLISH);
+    private static final List<DateTimeFormatter> DATE_TIME_FORMATS = List.of(
+            DATE_TIME_FORMAT, LEGACY_DATE_TIME_FORMAT, INPUT_DATE_TIME_FORMAT);
+    private static final List<DateTimeFormatter> DATE_FORMATS = List.of(DATE_FORMAT, INPUT_DATE_FORMAT);
     private final LocalDateTime from;
     private final LocalDateTime to;
     private final boolean fromHasTime;
@@ -73,23 +77,22 @@ public class Event extends Task {
     }
 
     private static ParsedDateTime parseDateTime(String value) {
-        try {
-            return new ParsedDateTime(LocalDateTime.parse(value, DATE_TIME_FORMAT), true);
-        } catch (DateTimeParseException e) {
+        DateTimeParseException lastError = new DateTimeParseException("Invalid date/time", value, 0);
+        for (DateTimeFormatter format : DATE_TIME_FORMATS) {
             try {
-                return new ParsedDateTime(LocalDateTime.parse(value, LEGACY_DATE_TIME_FORMAT), true);
-            } catch (DateTimeParseException legacyFormatError) {
-                try {
-                    return new ParsedDateTime(LocalDateTime.parse(value, INPUT_DATE_TIME_FORMAT), true);
-                } catch (DateTimeParseException slashDateTimeError) {
-                    try {
-                        return new ParsedDateTime(LocalDate.parse(value, DATE_FORMAT).atStartOfDay(), false);
-                    } catch (DateTimeParseException isoDateError) {
-                        return new ParsedDateTime(LocalDate.parse(value, INPUT_DATE_FORMAT).atStartOfDay(), false);
-                    }
-                }
+                return new ParsedDateTime(LocalDateTime.parse(value, format), true);
+            } catch (DateTimeParseException exception) {
+                lastError = exception;
             }
         }
+        for (DateTimeFormatter format : DATE_FORMATS) {
+            try {
+                return new ParsedDateTime(LocalDate.parse(value, format).atStartOfDay(), false);
+            } catch (DateTimeParseException exception) {
+                lastError = exception;
+            }
+        }
+        throw lastError;
     }
 
     private record ParsedDateTime(LocalDateTime value, boolean hasTime) {

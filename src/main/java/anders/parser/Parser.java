@@ -101,60 +101,73 @@ public class Parser {
         String args = arguments(trimmedCommand);
         switch (word) {
             case "todo":
-                if (args.isEmpty()) {
-                    throw new AndersException("The description of a todo cannot be empty. Please include a "
-                            + "description!");
-                }
+                validateTodo(args);
                 break;
             case "deadline":
-                if (!isValidDeadline(args)) {
-                    throw new AndersException("A deadline needs a description and a /by value.");
-                }
-                try {
-                    parseTask(trimmedCommand);
-                } catch (DateTimeParseException e) {
-                    throw new AndersException("A deadline must use d/M/yyyy, d/M/yyyy HHmm, or yyyy-MM-dd format.");
-                }
+                validateDeadline(trimmedCommand, args);
                 break;
             case "event":
-                if (!isValidEvent(args)) {
-                    throw new AndersException("An event needs a description, /from value, and /to value.");
-                }
-                try {
-                    parseTask(trimmedCommand);
-                } catch (DateTimeParseException e) {
-                    throw new AndersException("Event dates must use yyyy-MM-dd or d/M/yyyy, optionally followed "
-                            + "by HHmm.");
-                }
+                validateEvent(trimmedCommand, args);
                 break;
             case "mark":
-                if (args.isEmpty()) {
-                    throw new AndersException("Mark needs a task number.");
-                }
+                validateRequiredArgument(args, "Mark", "a task number");
                 break;
             case "unmark":
-                if (args.isEmpty()) {
-                    throw new AndersException("Unmark needs a task number.");
-                }
+                validateRequiredArgument(args, "Unmark", "a task number");
                 break;
             case "delete":
-                if (args.isEmpty()) {
-                    throw new AndersException("Delete needs a task number.");
-                }
+                validateRequiredArgument(args, "Delete", "a task number");
                 break;
             case "find":
-                if (args.isEmpty()) {
-                    throw new AndersException("Find needs a keyword.");
-                }
+                validateRequiredArgument(args, "Find", "a keyword");
                 break;
             case "bye":
             case "list":
-                if (!args.isEmpty()) {
-                    throw new AndersException("I don't know what that means. Please try a supported command.");
-                }
+                validateNoArguments(args);
                 break;
             default:
                 throw new AndersException("I don't know what that means. Please try a supported command.");
+        }
+    }
+
+    private void validateTodo(String args) throws AndersException {
+        if (args.isEmpty()) {
+            throw new AndersException("The description of a todo cannot be empty. Please include a description!");
+        }
+    }
+
+    private void validateDeadline(String command, String args) throws AndersException {
+        if (!isValidDeadline(args)) {
+            throw new AndersException("A deadline needs a description and a /by value.");
+        }
+        try {
+            parseTask(command);
+        } catch (DateTimeParseException e) {
+            throw new AndersException("A deadline must use d/M/yyyy, d/M/yyyy HHmm, or yyyy-MM-dd format.");
+        }
+    }
+
+    private void validateEvent(String command, String args) throws AndersException {
+        if (!isValidEvent(args)) {
+            throw new AndersException("An event needs a description, /from value, and /to value.");
+        }
+        try {
+            parseTask(command);
+        } catch (DateTimeParseException e) {
+            throw new AndersException("Event dates must use yyyy-MM-dd or d/M/yyyy, optionally followed by HHmm.");
+        }
+    }
+
+    private void validateRequiredArgument(String args, String commandName, String argumentDescription)
+            throws AndersException {
+        if (args.isEmpty()) {
+            throw new AndersException(commandName + " needs " + argumentDescription + ".");
+        }
+    }
+
+    private void validateNoArguments(String args) throws AndersException {
+        if (!args.isEmpty()) {
+            throw new AndersException("I don't know what that means. Please try a supported command.");
         }
     }
 

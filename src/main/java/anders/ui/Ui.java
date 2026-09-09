@@ -116,8 +116,11 @@ public class Ui {
         assert task != null : "The UI can only format an existing task";
         String typeIcon = task instanceof Deadline ? "D" : task instanceof Event ? "E" : "T";
         String taskText = task.toString();
-        assert taskText.startsWith("[" + typeIcon + "] ")
+
+        String typePrefix = "[" + typeIcon + "] ";
+        assert taskText.startsWith(typePrefix)
                 : "Every displayable task must include its type prefix";
-        return "[" + typeIcon + "][" + task.getStatusIcon() + "] " + taskText.substring(4);
+        return "[" + typeIcon + "][" + task.getStatusIcon() + "] "
+                + taskText.substring(typePrefix.length());
     }
 }

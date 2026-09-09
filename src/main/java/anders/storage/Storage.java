@@ -17,6 +17,13 @@ import anders.task.Todo;
 
 /** Handles loading tasks from and saving tasks to a file. */
 public class Storage {
+    private static final String CURRENT_FORMAT_VERSION = "2";
+    private static final String TODO_TYPE = "T";
+    private static final String DEADLINE_TYPE = "D";
+    private static final String EVENT_TYPE = "E";
+    private static final String NOT_DONE_STATUS = "0";
+    private static final String DONE_STATUS = "1";
+
     private final Path file;
 
     /** Creates storage backed by {@code filePath}. */
@@ -50,6 +57,7 @@ public class Storage {
         for (int i = 0; i < tasks.size(); i++) {
             Task task = tasks.get(i);
             assert task != null : "A task list must not contain null tasks";
+            lines.add(serialize(task));
             String type = task instanceof Deadline ? "D" : task instanceof Event ? "E" : "T";
             String line = "2|" + type + "|" + (task.isDone() ? "1" : "0") + "|" + encode(task.getDescription());
             if (task instanceof Deadline d) {
@@ -77,36 +85,94 @@ public class Storage {
         }
         try {
             String[] fields = line.split("\\|", -1);
-            Task task;
-            if (fields.length >= 4 && fields[0].equals("2")) {
-                if (!fields[2].equals("0") && !fields[2].equals("1")) {
-                    return null;
-                }
-                task = fields[1].equals("T") && fields.length == 4 ? new Todo(decode(fields[3]))
-                        : fields[1].equals("D") && fields.length == 5
-                        ? new Deadline(decode(fields[3]), decode(fields[4]))
-                        : fields[1].equals("E") && fields.length == 6
-                        ? new Event(decode(fields[3]), decode(fields[4]), decode(fields[5])) : null;
-                if (task != null && fields[2].equals("1")) {
-                    task.markAsDone();
-                }
-                return task;
+            if (fields.length >= 4 && CURRENT_FORMAT_VERSION.equals(fields[0])) {
+                return parseVersionedRecord(fields);
             }
-            fields = line.split("\\s*\\|\\s*", -1);
-            if (fields.length < 3 || !(fields[1].equals("0") || fields[1].equals("1"))) {
-                return null;
-            }
-            task = fields[0].equals("T") && fields.length == 3 ? new Todo(fields[2])
-                    : fields[0].equals("D") && fields.length == 4 ? new Deadline(fields[2], fields[3])
-                    : fields[0].equals("E") && fields.length == 5
-                    ? new Event(fields[2], fields[3], fields[4]) : null;
-            if (task != null && fields[1].equals("1")) {
-                task.markAsDone();
-            }
-            return task;
+
+            return parseLegacyRecord(line);
         } catch (IllegalArgumentException e) {
             return null;
         }
+    }
+
+    private static String serialize(Task task) {
+        StringBuilder line = new StringBuilder(CURRENT_FORMAT_VERSION)
+                .append('|').append(getType(task))
+                .append('|').append(task.isDone() ? DONE_STATUS : NOT_DONE_STATUS)
+                .append('|').append(encode(task.getDescription()));
+        if (task instanceof Deadline deadline) {
+            line.append('|').append(encode(deadline.getByText()));
+        } else if (task instanceof Event event) {
+            line.append('|').append(encode(event.getFromText()))
+                    .append('|').append(encode(event.getToText()));
+        }
+        return line.toString();
+    }
+
+    private static String getType(Task task) {
+        if (task instanceof Deadline) {
+            return DEADLINE_TYPE;
+        }
+        if (task instanceof Event) {
+            return EVENT_TYPE;
+        }
+        return TODO_TYPE;
+    }
+
+    private static Task parseVersionedRecord(String[] fields) {
+        if (!isValidStatus(fields[2])) {
+            return null;
+        }
+        Task task = createTask(fields[1], fields, 3, true);
+        return applyStatus(task, fields[2]);
+    }
+
+    private static Task parseLegacyRecord(String line) {
+        String[] fields = line.split("\\s*\\|\\s*", -1);
+        if (fields.length < 3 || !isValidStatus(fields[1])) {
+            return null;
+        }
+        Task task = createTask(fields[0], fields, 2, false);
+        return applyStatus(task, fields[1]);
+    }
+
+    private static boolean isValidStatus(String status) {
+        return NOT_DONE_STATUS.equals(status) || DONE_STATUS.equals(status);
+    }
+
+    private static Task createTask(String type, String[] fields, int dataStart, boolean isEncoded) {
+        switch (type) {
+            case TODO_TYPE:
+                if (fields.length != dataStart + 1) {
+                    return null;
+                }
+                return new Todo(readField(fields[dataStart], isEncoded));
+            case DEADLINE_TYPE:
+                if (fields.length != dataStart + 2) {
+                    return null;
+                }
+                return new Deadline(readField(fields[dataStart], isEncoded),
+                        readField(fields[dataStart + 1], isEncoded));
+            case EVENT_TYPE:
+                if (fields.length != dataStart + 3) {
+                    return null;
+                }
+                return new Event(readField(fields[dataStart], isEncoded),
+                        readField(fields[dataStart + 1], isEncoded), readField(fields[dataStart + 2], isEncoded));
+            default:
+                return null;
+        }
+    }
+
+    private static String readField(String value, boolean isEncoded) {
+        return isEncoded ? decode(value) : value;
+    }
+
+    private static Task applyStatus(Task task, String status) {
+        if (task != null && DONE_STATUS.equals(status)) {
+            task.markAsDone();
+        }
+        return task;
     }
 
     /** Encodes a task field so separators and Unicode characters are preserved. */

@@ -49,6 +49,22 @@ public class StorageTest {
     }
 
     @Test
+    public void load_legacyRecords_reconstructsTaskTypesAndStatus() throws Exception {
+        Path file = temporaryDirectory.resolve("legacy-tasks.txt");
+        Files.write(file, List.of(
+                "T | 1 | read book",
+                "D | 0 | return book | 2/12/2019",
+                "E | 0 | project meeting | 2025-01-01 1400 | 2025-01-01 1600"));
+
+        List<Task> tasks = new Storage(file.toString()).load();
+
+        assertEquals(3, tasks.size());
+        assertTrue(tasks.get(0).isDone());
+        assertEquals("2/12/2019", ((Deadline) tasks.get(1)).getByText());
+        assertEquals("2025-01-01 1400", ((Event) tasks.get(2)).getFromText());
+    }
+
+    @Test
     public void load_malformedRecords_ignoresInvalidEntries() throws Exception {
         Path file = temporaryDirectory.resolve("tasks.txt");
         Files.write(file, List.of(
