@@ -55,6 +55,11 @@ public class ParserTest {
     }
 
     @Test
+    public void parseTask_nonTaskCommand_failsFastWithAssertion() {
+        assertThrows(AssertionError.class, () -> parser.parseTask("list"));
+    }
+
+    @Test
     public void parse_supportedCommands_createsExpectedCommandTypes() throws AndersException {
         assertInstanceOf(ExitCommand.class, Parser.parse("bye"));
         assertInstanceOf(AddCommand.class, Parser.parse("todo read book"));

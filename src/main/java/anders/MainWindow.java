@@ -30,6 +30,8 @@ public class MainWindow extends AnchorPane {
 
     @FXML
     private void initialize() {
+        assert scrollPane != null && messages != null && input != null
+                : "FXML must inject all main-window controls before initialization";
         scrollPane.vvalueProperty().bind(messages.heightProperty());
         messages.getChildren().add(DialogBox.getAndersDialog(
                 "Hello! I'm Anders, your friendly study companion."));
