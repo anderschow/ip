@@ -17,6 +17,6 @@ public class Todo extends Task {
     /** Returns the display text for this todo task. */
     @Override
     public String toString() {
-        return "[T] " + super.toString();
+        return "[T] " + super.toString() + getTagsDisplayText();
     }
 }

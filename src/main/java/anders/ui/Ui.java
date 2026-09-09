@@ -70,7 +70,10 @@ public class Ui {
         boolean hasMatch = false;
         for (int i = 0; i < tasks.size(); i++) {
             Task task = tasks.get(i);
-            if (task.getDescription().toLowerCase(Locale.ROOT).contains(searchText)) {
+            boolean matches = keyword.startsWith("#")
+                    ? task.hasTag(keyword)
+                    : task.getDescription().toLowerCase(Locale.ROOT).contains(searchText);
+            if (matches) {
                 hasMatch = true;
                 System.out.println("     " + (i + 1) + "." + formatTask(task));
             }
@@ -91,7 +94,20 @@ public class Ui {
     public void showMarked(Task task, boolean done) {
         System.out.println(done ? "     Nice! I've marked this task as done:"
                 : "     OK, I've marked this task as not done yet:");
-        System.out.println("       [" + (done ? "X" : " ") + "] " + task.getDescription());
+        System.out.println("       [" + (done ? "X" : " ") + "] " + task.getDescription()
+                + task.getTagsDisplayText());
+    }
+
+    /** Displays the result of adding or removing tags from a task. */
+    public void showTagUpdate(Task task, boolean adding, boolean changed) {
+        if (adding) {
+            System.out.println(changed ? "     Nice! I've tagged this task:"
+                    : "     This task already has these tags:");
+        } else {
+            System.out.println(changed ? "     OK, I've removed these tags from this task:"
+                    : "     This task does not have these tags:");
+        }
+        System.out.println("       " + formatTask(task));
     }
 
     /** Displays a deletion confirmation. */

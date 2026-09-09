@@ -49,6 +49,23 @@ public class StorageTest {
     }
 
     @Test
+    public void load_taggedRecords_reconstructsReusableTags() throws Exception {
+        Path file = temporaryDirectory.resolve("tagged-tasks.txt");
+        Files.write(file, List.of(
+                "3|T|0|cmVhZCBib29r|I2Z1bg==",
+                "3|T|1|cmV2aXNlIG5vdGVz|I2Z1bg==",
+                "3|D|0|cmV0dXJuIGJvb2s=|MjAxOS0xMi0wMg==|I2FkbWlu"));
+
+        List<Task> tasks = new Storage(file.toString()).load();
+
+        assertEquals(3, tasks.size());
+        assertEquals(List.of("#fun"), tasks.get(0).getTags());
+        assertEquals(List.of("#fun"), tasks.get(1).getTags());
+        assertEquals(List.of("#admin"), tasks.get(2).getTags());
+        assertTrue(tasks.get(1).isDone());
+    }
+
+    @Test
     public void load_legacyRecords_reconstructsTaskTypesAndStatus() throws Exception {
         Path file = temporaryDirectory.resolve("legacy-tasks.txt");
         Files.write(file, List.of(
@@ -86,6 +103,7 @@ public class StorageTest {
         TaskList tasks = new TaskList();
         Task todo = new Todo("read | book");
         todo.markAsDone();
+        todo.addTags(List.of("#fun"));
         tasks.add(todo);
         tasks.add(new Deadline("return book", "2019-12-02"));
         tasks.add(new Event("meeting", "2025-01-01 14:00", "2025-01-01 16:00"));
@@ -96,7 +114,9 @@ public class StorageTest {
         assertEquals(3, loaded.size());
         assertEquals("read | book", loaded.get(0).getDescription());
         assertTrue(loaded.get(0).isDone());
+        assertEquals(List.of("#fun"), loaded.get(0).getTags());
         assertEquals("2019-12-02", ((Deadline) loaded.get(1)).getByText());
         assertEquals("2025-01-01 1400", ((Event) loaded.get(2)).getFromText());
+        assertTrue(Files.readAllLines(file).get(0).startsWith("3|T|1|"));
     }
 }

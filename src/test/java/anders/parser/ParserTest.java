@@ -15,6 +15,7 @@ import anders.command.Command;
 import anders.command.ExitCommand;
 import anders.command.FindCommand;
 import anders.command.MarkCommand;
+import anders.command.TagCommand;
 import anders.task.Deadline;
 import anders.task.Event;
 import anders.task.Task;
@@ -31,6 +32,19 @@ public class ParserTest {
 
         assertInstanceOf(Todo.class, task);
         assertEquals("read book", task.getDescription());
+    }
+
+    @Test
+    public void parseTask_creationTags_createsNormalizedTagsForAllTaskTypes() {
+        Todo todo = assertInstanceOf(Todo.class, parser.parseTask("todo read book /tags #Fun #school"));
+        Deadline deadline = assertInstanceOf(Deadline.class,
+                parser.parseTask("deadline return book /by 2019-12-02 /tags #Admin"));
+        Event event = assertInstanceOf(Event.class, parser.parseTask(
+                "event project meeting /from 2025-01-01 14:00 /to 2025-01-01 16:00 /tags #Project #meeting"));
+
+        assertEquals(java.util.List.of("#fun", "#school"), todo.getTags());
+        assertEquals(java.util.List.of("#admin"), deadline.getTags());
+        assertEquals(java.util.List.of("#project", "#meeting"), event.getTags());
     }
 
     @Test
@@ -72,6 +86,8 @@ public class ParserTest {
         assertInstanceOf(AddCommand.class, Parser.parse("todo read book"));
         assertInstanceOf(MarkCommand.class, Parser.parse("mark 1"));
         assertInstanceOf(FindCommand.class, Parser.parse("find book"));
+        assertInstanceOf(TagCommand.class, Parser.parse("tag 1 #fun"));
+        assertInstanceOf(TagCommand.class, Parser.parse("untag 1 #fun"));
     }
 
     @Test
@@ -112,5 +128,26 @@ public class ParserTest {
                 parser.validate("deadline return book /by tomorrow"));
 
         assertTrue(exception.getMessage().contains("d/M/yyyy"));
+    }
+
+    @Test
+    public void validate_invalidTags_throwHelpfulExceptions() {
+        String missingTagCommand = "todo read book /tags";
+        String invalidTagCommand = "tag 1 fun";
+        AndersException missingTags = assertThrows(AndersException.class, () ->
+                parser.validate(missingTagCommand));
+        AndersException invalidTag = assertThrows(AndersException.class, () ->
+                parser.validate(invalidTagCommand));
+
+        assertEquals("The /tags clause must contain at least one tag.", missingTags.getMessage());
+        assertTrue(invalidTag.getMessage().contains("must start with #"));
+    }
+
+    @Test
+    public void validate_tagCommands_requireTaskNumberAndTags() {
+        assertThrows(AndersException.class, () -> parser.validate("tag"));
+        assertThrows(AndersException.class, () -> parser.validate("untag 1"));
+        assertThrows(AndersException.class, () -> parser.validate("tag 1 #fun #"));
+        assertThrows(AndersException.class, () -> parser.validate("find #fun!"));
     }
 }

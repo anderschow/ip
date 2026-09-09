@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,6 +51,45 @@ public class UiTest {
 
         assertTrue(capturedOutput.toString().contains("1.[D][ ] return book (by: Dec 02 2019)"));
     }
+
+    @Test
+    public void showTaskList_reusableTags_displaysTagsForEachTask() {
+        TaskList tasks = new TaskList();
+        Task firstTask = new Todo("read book");
+        Task secondTask = new Todo("revise notes");
+        firstTask.addTags(List.of("#fun"));
+        secondTask.addTags(List.of("#fun", "#school"));
+        tasks.add(firstTask);
+        tasks.add(secondTask);
+
+        new Ui().showTaskList(tasks);
+
+        String output = capturedOutput.toString();
+        assertTrue(output.contains("1.[T][ ] read book (tags: #fun)"));
+        assertTrue(output.contains("2.[T][ ] revise notes (tags: #fun #school)"));
+    }
+
+    @Test
+    public void showMatchingTasks_tagKeyword_matchesExactReusableTag() {
+        TaskList tasks = new TaskList();
+        Task matchingTask = new Todo("read book");
+        Task secondMatchingTask = new Todo("revise notes");
+        Task nonMatchingTask = new Todo("have fun");
+        matchingTask.addTags(List.of("#fun"));
+        secondMatchingTask.addTags(List.of("#FUN"));
+        nonMatchingTask.addTags(List.of("#funny"));
+        tasks.add(matchingTask);
+        tasks.add(secondMatchingTask);
+        tasks.add(nonMatchingTask);
+
+        new Ui().showMatchingTasks(tasks, "#Fun");
+
+        String output = capturedOutput.toString();
+        assertTrue(output.contains("1.[T][ ] read book (tags: #fun)"));
+        assertTrue(output.contains("2.[T][ ] revise notes (tags: #fun)"));
+        assertTrue(!output.contains("3.[T][ ] have fun (tags: #funny)"));
+    }
+
     public void showTaskList_taskWithoutTypePrefix_failsFastWithAssertion() {
         TaskList tasks = new TaskList();
         tasks.add(new Task("plain task"));

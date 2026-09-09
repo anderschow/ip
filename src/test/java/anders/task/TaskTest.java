@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 /** Tests the completion-status behavior of {@link Task}. */
@@ -88,6 +90,49 @@ public class TaskTest {
         Task task = new Task("read book");
 
         assertEquals("read book", task.toString());
+    }
+
+    @Test
+    public void addTags_reusesTagsAcrossTasks_butAvoidsDuplicatesWithinTask() {
+        Task firstTask = new Todo("read book");
+        Task secondTask = new Todo("revise notes");
+
+        assertTrue(firstTask.addTags(List.of("#Fun", "#school", "#fun")));
+        assertFalse(firstTask.addTags(List.of("#FUN")));
+        assertTrue(secondTask.addTags(List.of("#fun")));
+
+        assertEquals(List.of("#fun", "#school"), firstTask.getTags());
+        assertEquals(List.of("#fun"), secondTask.getTags());
+    }
+
+    @Test
+    public void removeTags_existingAndMissingTags_updatesOnlySelectedTask() {
+        Task firstTask = new Todo("read book");
+        Task secondTask = new Todo("revise notes");
+        firstTask.addTags(List.of("#fun", "#school"));
+        secondTask.addTags(List.of("#fun"));
+
+        assertTrue(firstTask.removeTags(List.of("#school", "#missing")));
+
+        assertEquals(List.of("#fun"), firstTask.getTags());
+        assertEquals(List.of("#fun"), secondTask.getTags());
+    }
+
+    @Test
+    public void addTags_invalidTag_failsWithoutChangingExistingTags() {
+        Task task = new Todo("read book");
+        task.addTags(List.of("#fun"));
+
+        assertThrows(IllegalArgumentException.class, () -> task.addTags(List.of("#school", "fun!")));
+        assertEquals(List.of("#fun"), task.getTags());
+    }
+
+    @Test
+    public void toString_taggedTodo_includesTags() {
+        Task task = new Todo("read book");
+        task.addTags(List.of("#fun"));
+
+        assertEquals("[T] read book (tags: #fun)", task.toString());
     }
 
     @Test

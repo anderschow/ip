@@ -57,7 +57,8 @@ public class Event extends Task {
     public String toString() {
         String fromText = formatForDisplay(from, fromHasTime);
         String toText = formatForDisplay(to, toHasTime);
-        return "[E] " + super.toString() + " (from: " + fromText + " to: " + toText + ")";
+        return "[E] " + super.toString() + " (from: " + fromText + " to: " + toText + ")"
+                + getTagsDisplayText();
     }
 
     /** Returns the canonical start value used for persistence. */

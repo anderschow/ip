@@ -1,6 +1,8 @@
 package anders.parser;
 
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -12,6 +14,7 @@ import anders.command.ExitCommand;
 import anders.command.FindCommand;
 import anders.command.ListCommand;
 import anders.command.MarkCommand;
+import anders.command.TagCommand;
 import anders.task.Deadline;
 import anders.task.Event;
 import anders.task.Task;
@@ -21,6 +24,9 @@ import anders.task.Todo;
 public class Parser {
     private static final Pattern DEADLINE_PATTERN = Pattern.compile("(.+?)\\s+/by\\s+(.+)");
     private static final Pattern EVENT_PATTERN = Pattern.compile("(.+?)\\s+/from\\s+(.+?)\\s+/to\\s+(.+)");
+    private static final Pattern TAG_CLAUSE_PATTERN = Pattern.compile("^(?:(.*?)\\s+)?/tags(?:\\s+(.*))?$");
+    private static final String TAG_ERROR_MESSAGE =
+            "Each tag must start with # and contain only letters, digits, hyphens, or underscores.";
 
     /** Converts a validated command string into an executable command object. */
     public static Command parse(String command) throws AndersException {
@@ -41,6 +47,10 @@ public class Parser {
                 return new DeleteCommand(args);
             case "find":
                 return new FindCommand(args);
+            case "tag":
+                return new TagCommand(args, true);
+            case "untag":
+                return new TagCommand(args, false);
             case "todo":
             case "deadline":
             case "event":
@@ -67,23 +77,25 @@ public class Parser {
     /** Builds a task from a validated task-creation command. */
     public Task parseTask(String command) {
         String details = arguments(command);
+        CreationParts parts = parseCreationParts(details);
         switch (commandWord(command)) {
             case "todo":
-                return new Todo(details);
+                return createTaggedTask(new Todo(parts.taskDetails()), parts.tags());
             case "deadline": {
-                Matcher deadlineMatcher = DEADLINE_PATTERN.matcher(details);
+                Matcher deadlineMatcher = DEADLINE_PATTERN.matcher(parts.taskDetails());
                 if (!deadlineMatcher.matches()) {
                     throw new IllegalArgumentException("Invalid deadline format");
                 }
-                return new Deadline(deadlineMatcher.group(1).trim(), deadlineMatcher.group(2).trim());
+                return createTaggedTask(new Deadline(deadlineMatcher.group(1).trim(), deadlineMatcher.group(2).trim()),
+                        parts.tags());
             }
             case "event": {
-                Matcher eventMatcher = EVENT_PATTERN.matcher(details);
+                Matcher eventMatcher = EVENT_PATTERN.matcher(parts.taskDetails());
                 if (!eventMatcher.matches()) {
                     throw new IllegalArgumentException("Invalid event format");
                 }
-                return new Event(eventMatcher.group(1).trim(), eventMatcher.group(2).trim(),
-                        eventMatcher.group(3).trim());
+                return createTaggedTask(new Event(eventMatcher.group(1).trim(), eventMatcher.group(2).trim(),
+                        eventMatcher.group(3).trim()), parts.tags());
             }
             default:
                 assert false : "parseTask must only receive a task-creation command";
@@ -119,7 +131,13 @@ public class Parser {
                 validateRequiredArgument(args, "Delete", "a task number");
                 break;
             case "find":
-                validateRequiredArgument(args, "Find", "a keyword");
+                validateFind(args);
+                break;
+            case "tag":
+                validateTagCommand(args, "Tag");
+                break;
+            case "untag":
+                validateTagCommand(args, "Untag");
                 break;
             case "bye":
             case "list":
@@ -131,13 +149,15 @@ public class Parser {
     }
 
     private void validateTodo(String args) throws AndersException {
-        if (args.isEmpty()) {
+        CreationParts parts = getCreationParts(args);
+        if (parts.taskDetails().isEmpty()) {
             throw new AndersException("The description of a todo cannot be empty. Please include a description!");
         }
     }
 
     private void validateDeadline(String command, String args) throws AndersException {
-        if (!isValidDeadline(args)) {
+        CreationParts parts = getCreationParts(args);
+        if (!isValidDeadline(parts.taskDetails())) {
             throw new AndersException("A deadline needs a description and a /by value.");
         }
         try {
@@ -148,7 +168,8 @@ public class Parser {
     }
 
     private void validateEvent(String command, String args) throws AndersException {
-        if (!isValidEvent(args)) {
+        CreationParts parts = getCreationParts(args);
+        if (!isValidEvent(parts.taskDetails())) {
             throw new AndersException("An event needs a description, /from value, and /to value.");
         }
         try {
@@ -162,6 +183,28 @@ public class Parser {
             throws AndersException {
         if (args.isEmpty()) {
             throw new AndersException(commandName + " needs " + argumentDescription + ".");
+        }
+    }
+
+    private void validateFind(String args) throws AndersException {
+        validateRequiredArgument(args, "Find", "a keyword");
+        if (args.startsWith("#") && !Task.isValidTag(args)) {
+            throw new AndersException(TAG_ERROR_MESSAGE);
+        }
+    }
+
+    private void validateTagCommand(String args, String commandName) throws AndersException {
+        if (args.isEmpty()) {
+            throw new AndersException(commandName + " needs a task number and at least one tag.");
+        }
+        String[] fields = args.split("\\s+");
+        if (fields.length < 2) {
+            throw new AndersException(commandName + " needs a task number and at least one tag.");
+        }
+        for (int i = 1; i < fields.length; i++) {
+            if (!Task.isValidTag(fields[i])) {
+                throw new AndersException(TAG_ERROR_MESSAGE);
+            }
         }
     }
 
@@ -194,5 +237,46 @@ public class Parser {
             }
         }
         return -1;
+    }
+
+    private static CreationParts parseCreationParts(String details) {
+        Matcher tagMatcher = TAG_CLAUSE_PATTERN.matcher(details);
+        if (!tagMatcher.matches()) {
+            return new CreationParts(details, List.of());
+        }
+
+        String taskDetails = tagMatcher.group(1) == null ? "" : tagMatcher.group(1).trim();
+        String tagText = tagMatcher.group(2) == null ? "" : tagMatcher.group(2).trim();
+        if (tagText.isEmpty()) {
+            throw new IllegalArgumentException("The /tags clause must contain at least one tag.");
+        }
+        return new CreationParts(taskDetails, parseTags(tagText));
+    }
+
+    private static List<String> parseTags(String tagText) {
+        List<String> tags = new ArrayList<>();
+        for (String tag : tagText.split("\\s+")) {
+            if (!Task.isValidTag(tag)) {
+                throw new IllegalArgumentException(TAG_ERROR_MESSAGE);
+            }
+            tags.add(Task.normalizeTag(tag));
+        }
+        return List.copyOf(tags);
+    }
+
+    private static CreationParts getCreationParts(String details) throws AndersException {
+        try {
+            return parseCreationParts(details);
+        } catch (IllegalArgumentException exception) {
+            throw new AndersException(exception.getMessage());
+        }
+    }
+
+    private static Task createTaggedTask(Task task, List<String> tags) {
+        task.addTags(tags);
+        return task;
+    }
+
+    private record CreationParts(String taskDetails, List<String> tags) {
     }
 }

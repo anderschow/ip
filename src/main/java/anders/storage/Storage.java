@@ -7,7 +7,9 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import anders.collection.TaskList;
 import anders.task.Deadline;
@@ -17,7 +19,8 @@ import anders.task.Todo;
 
 /** Handles loading tasks from and saving tasks to a file. */
 public class Storage {
-    private static final String CURRENT_FORMAT_VERSION = "2";
+    private static final String CURRENT_FORMAT_VERSION = "3";
+    private static final String LEGACY_VERSIONED_FORMAT = "2";
     private static final String TODO_TYPE = "T";
     private static final String DEADLINE_TYPE = "D";
     private static final String EVENT_TYPE = "E";
@@ -76,7 +79,8 @@ public class Storage {
         }
         try {
             String[] fields = line.split("\\|", -1);
-            if (fields.length >= 4 && CURRENT_FORMAT_VERSION.equals(fields[0])) {
+            if (fields.length >= 4
+                    && (CURRENT_FORMAT_VERSION.equals(fields[0]) || LEGACY_VERSIONED_FORMAT.equals(fields[0]))) {
                 return parseVersionedRecord(fields);
             }
 
@@ -97,6 +101,7 @@ public class Storage {
             line.append('|').append(encode(event.getFromText()))
                     .append('|').append(encode(event.getToText()));
         }
+        line.append('|').append(encode(String.join(",", task.getTags())));
         return line.toString();
     }
 
@@ -114,7 +119,9 @@ public class Storage {
         if (!isValidStatus(fields[2])) {
             return null;
         }
-        Task task = createTask(fields[1], fields, 3, true);
+        boolean hasTags = CURRENT_FORMAT_VERSION.equals(fields[0]);
+        String tagsText = hasTags ? readField(fields[fields.length - 1], true) : null;
+        Task task = createTask(fields[1], fields, 3, true, tagsText);
         return applyStatus(task, fields[2]);
     }
 
@@ -123,7 +130,7 @@ public class Storage {
         if (fields.length < 3 || !isValidStatus(fields[1])) {
             return null;
         }
-        Task task = createTask(fields[0], fields, 2, false);
+        Task task = createTask(fields[0], fields, 2, false, null);
         return applyStatus(task, fields[1]);
     }
 
@@ -131,28 +138,52 @@ public class Storage {
         return NOT_DONE_STATUS.equals(status) || DONE_STATUS.equals(status);
     }
 
-    private static Task createTask(String type, String[] fields, int dataStart, boolean isEncoded) {
+    private static Task createTask(String type, String[] fields, int dataStart, boolean isEncoded,
+            String tagsText) {
+        int tagFieldCount = tagsText == null ? 0 : 1;
         switch (type) {
             case TODO_TYPE:
-                if (fields.length != dataStart + 1) {
+                if (fields.length != dataStart + 1 + tagFieldCount) {
                     return null;
                 }
-                return new Todo(readField(fields[dataStart], isEncoded));
+                return createTaskWithTags(new Todo(readField(fields[dataStart], isEncoded)), tagsText);
             case DEADLINE_TYPE:
-                if (fields.length != dataStart + 2) {
+                if (fields.length != dataStart + 2 + tagFieldCount) {
                     return null;
                 }
-                return new Deadline(readField(fields[dataStart], isEncoded),
-                        readField(fields[dataStart + 1], isEncoded));
+                return createTaskWithTags(new Deadline(readField(fields[dataStart], isEncoded),
+                        readField(fields[dataStart + 1], isEncoded)), tagsText);
             case EVENT_TYPE:
-                if (fields.length != dataStart + 3) {
+                if (fields.length != dataStart + 3 + tagFieldCount) {
                     return null;
                 }
-                return new Event(readField(fields[dataStart], isEncoded),
-                        readField(fields[dataStart + 1], isEncoded), readField(fields[dataStart + 2], isEncoded));
+                return createTaskWithTags(new Event(readField(fields[dataStart], isEncoded),
+                        readField(fields[dataStart + 1], isEncoded), readField(fields[dataStart + 2], isEncoded)),
+                        tagsText);
             default:
                 return null;
         }
+    }
+
+    private static Task createTaskWithTags(Task task, String tagsText) {
+        if (task == null || tagsText == null) {
+            return task;
+        }
+        task.addTags(parseStoredTags(tagsText));
+        return task;
+    }
+
+    private static List<String> parseStoredTags(String tagsText) {
+        if (tagsText.isEmpty()) {
+            return List.of();
+        }
+        Set<String> tags = new LinkedHashSet<>();
+        for (String tag : tagsText.split(",", -1)) {
+            if (!Task.isValidTag(tag) || !tags.add(Task.normalizeTag(tag))) {
+                throw new IllegalArgumentException("Invalid stored tags");
+            }
+        }
+        return List.copyOf(tags);
     }
 
     private static String readField(String value, boolean isEncoded) {

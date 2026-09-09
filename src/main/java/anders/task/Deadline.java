@@ -59,7 +59,7 @@ public class Deadline extends Task {
     public String toString() {
         String time = by.format(DISPLAY_TIME_FORMAT).toLowerCase(Locale.ROOT);
         String display = by.format(DISPLAY_FORMAT) + (hasTime ? " " + time : "");
-        return "[D] " + super.toString() + " (by: " + display + ")";
+        return "[D] " + super.toString() + " (by: " + display + ")" + getTagsDisplayText();
     }
 
     /** Returns the canonical value used for persistence. */

@@ -75,6 +75,31 @@ Each test case specifies its aim, commands, and expected output associated with 
       "expected": ["Now you have 1 tasks in the list.", "Now you have 2 tasks in the list.", "Now you have 3 tasks in the list.", "I've removed this task", "Now you have 2 tasks in the list.", "1.[T][ ] read book", "2.[E][ ] project meeting (from: Aug 06 2025 2.00 pm to: Aug 06 2025 4.00 pm)", "Bye! Keep learning"]
     },
     {
+      "name": "create and reuse tags across tasks",
+      "aim": "Verify tags can be supplied during creation, reused by multiple tasks, and searched case-insensitively.",
+      "commands": ["todo read book /tags #Fun #school", "todo revise notes /tags #fun", "list", "find #FUN", "bye"],
+      "expected": ["[T] read book (tags: #fun #school)", "[T] revise notes (tags: #fun)", "1.[T][ ] read book (tags: #fun #school)", "2.[T][ ] revise notes (tags: #fun)", "Bye! Keep learning"]
+    },
+    {
+      "name": "add and remove tags after creation",
+      "aim": "Verify tag and untag commands update one task, prevent duplicates, and preserve the remaining tags.",
+      "commands": ["todo read book", "tag 1 #fun #school", "tag 1 #FUN", "untag 1 #school", "list", "bye"],
+      "expected": ["Now you have 1 tasks in the list.", "Nice! I've tagged this task:", "This task already has these tags:", "OK, I've removed these tags from this task:", "1.[T][ ] read book (tags: #fun)", "Bye! Keep learning"]
+    },
+    {
+      "name": "invalid tags do not alter state",
+      "aim": "Verify malformed tags are rejected and do not create or modify task tags.",
+      "commands": ["todo valid task /tags #fun", "tag 1 fun", "untag 1 #", "list", "bye"],
+      "expected": ["Now you have 1 tasks in the list.", "OOPS!!! Each tag must start with #", "OOPS!!! Each tag must start with #", "1.[T][ ] valid task (tags: #fun)", "Bye! Keep learning"]
+    },
+    {
+      "name": "load saved tags on startup",
+      "aim": "Verify version-3 saved tags are reconstructed and displayed when Anders starts.",
+      "saved_file": "3|T|0|cmVhZCBib29r|I2Z1bg==",
+      "commands": ["list", "bye"],
+      "expected": ["1.[T][ ] read book (tags: #fun)", "Bye! Keep learning"]
+    },
+    {
       "name": "find tasks by keyword",
       "aim": "Verify find displays matching task descriptions with their original list numbers.",
       "commands": ["todo read book", "deadline return book /by 2019-12-02", "todo revise notes", "find BOOK", "find NOTHING", "bye"],
