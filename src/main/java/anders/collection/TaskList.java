@@ -22,11 +22,14 @@ public class TaskList {
      * @param tasks tasks to copy into this list
      */
     public TaskList(List<Task> tasks) {
+        assert tasks != null : "The initial task collection must not be null";
         this.tasks = new ArrayList<>(tasks);
+        assert !this.tasks.contains(null) : "A task list must not contain null tasks";
     }
 
     /** Adds a task to the end of the list. */
     public void add(Task task) {
+        assert task != null : "A task list must not contain null tasks";
         tasks.add(task);
     }
 

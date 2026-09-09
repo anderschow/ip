@@ -45,9 +45,11 @@ public class Storage {
 
     /** Saves the current tasks in the versioned encoded format. */
     public void save(TaskList tasks) {
+        assert tasks != null : "Storage must save a task list, not null";
         List<String> lines = new ArrayList<>();
         for (int i = 0; i < tasks.size(); i++) {
             Task task = tasks.get(i);
+            assert task != null : "A task list must not contain null tasks";
             String type = task instanceof Deadline ? "D" : task instanceof Event ? "E" : "T";
             String line = "2|" + type + "|" + (task.isDone() ? "1" : "0") + "|" + encode(task.getDescription());
             if (task instanceof Deadline d) {
