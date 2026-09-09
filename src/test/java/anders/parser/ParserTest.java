@@ -98,6 +98,12 @@ public class ParserTest {
     }
 
     @Test
+    public void validate_noArgumentCommands_rejectExtraArguments() {
+        assertThrows(AndersException.class, () -> parser.validate("list extra"));
+        assertThrows(AndersException.class, () -> parser.validate("bye extra"));
+    }
+
+    @Test
     public void validate_invalidDeadline_hasHelpfulFormatMessage() {
         AndersException exception = assertThrows(AndersException.class, () ->
                 parser.validate("deadline return book /by tomorrow"));
