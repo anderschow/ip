@@ -55,6 +55,15 @@ public class ParserTest {
     }
 
     @Test
+    public void parseTask_eventCommand_acceptsSlashDates() {
+        Event event = assertInstanceOf(Event.class,
+                parser.parseTask("event project meeting /from 1/1/2025 1400 /to 1/1/2025 1600"));
+
+        assertEquals(LocalDateTime.of(2025, 1, 1, 14, 0), event.getFrom());
+        assertEquals(LocalDateTime.of(2025, 1, 1, 16, 0), event.getTo());
+    }
+
+    @Test
     public void parse_supportedCommands_createsExpectedCommandTypes() throws AndersException {
         assertInstanceOf(ExitCommand.class, Parser.parse("bye"));
         assertInstanceOf(AddCommand.class, Parser.parse("todo read book"));
