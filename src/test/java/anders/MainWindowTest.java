@@ -450,4 +450,46 @@ public class MainWindowTest {
         Platform.runLater(task);
         task.get(10, TimeUnit.SECONDS);
     }
+
+    @Test
+    public void initialize_unreadableStorage_displaysWarningAndKeepsInputUsable() throws Exception {
+        Path file = temporaryDirectory.resolve("tasks.txt");
+        Files.createDirectory(file);
+        runOnFxThread(() -> {
+            MainWindow window = new MainWindow(new Anders(new Storage(file.toString())));
+            new Scene(window, 460, 640);
+            window.resize(460, 640);
+            window.applyCss();
+            window.layout();
+            assertTrue(messageAt(window, 1).getText().contains("I couldn't read tasks from"));
+            assertTrue(messageAt(window, 1).getText().contains("saving is disabled"));
+            TextField input = (TextField) window.lookup("#input");
+            input.setText("todo new task");
+            input.fireEvent(new ActionEvent());
+            assertTrue(messageAt(window, 3).getText().contains("Changes are only available in this session"));
+            input.setText("list");
+            input.fireEvent(new ActionEvent());
+            assertTrue(messageAt(window, 5).getText().contains("1.[T][ ] new task"));
+        });
+    }
+
+    @Test
+    public void handleInput_invalidEvent_displaysErrorThenAcceptsValidCommand() throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = new MainWindow(new Anders(
+                    new Storage(temporaryDirectory.resolve("tasks.txt").toString())));
+            new Scene(window, 460, 640);
+            window.resize(460, 640);
+            window.applyCss();
+            window.layout();
+            TextField input = (TextField) window.lookup("#input");
+            input.setText("event meeting /from 2026-10-02 1600 /to 2026-10-02 1400");
+            input.fireEvent(new ActionEvent());
+            assertTrue(messageAt(window, 2).getText().contains("An event must end at or after it starts."));
+            input.setText("todo next task");
+            input.fireEvent(new ActionEvent());
+            assertTrue(messageAt(window, 4).getText().contains("Your trail holds 1 task."));
+        });
+    }
+
 }

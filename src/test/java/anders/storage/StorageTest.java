@@ -1,7 +1,9 @@
 package anders.storage;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Files;
@@ -11,6 +13,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import anders.AndersException;
 import anders.collection.TaskList;
 import anders.task.Deadline;
 import anders.task.Event;
@@ -119,4 +122,65 @@ public class StorageTest {
         assertEquals("2025-01-01 1400", ((Event) loaded.get(2)).getFromText());
         assertTrue(Files.readAllLines(file).get(0).startsWith("3|T|1|"));
     }
+
+    @Test
+    public void load_invalidSavedDates_retainsValidTasksAndWarns() throws Exception {
+        Path file = temporaryDirectory.resolve("tasks.txt");
+        Files.write(file, List.of(
+                "T | 0 | first task",
+                "D | 0 | bad date | tomorrow",
+                "D | 0 | impossible date | 31/2/2026",
+                "E | 0 | reversed event | 2026-10-02 1600 | 2026-10-02 1400",
+                "E | 0 | bad end | 2026-10-02 | tomorrow",
+                "T | 0 | last task"));
+        Storage storage = new Storage(file.toString());
+
+        List<Task> tasks = storage.load();
+
+        assertEquals(List.of("first task", "last task"), tasks.stream().map(Task::getDescription).toList());
+        assertTrue(storage.getLoadWarning().contains("Skipped 4 invalid saved task record(s)"));
+    }
+
+    @Test
+    public void load_unreadableFile_warnsAndProtectsExistingData() throws Exception {
+        Path file = temporaryDirectory.resolve("tasks.txt");
+        byte[] original = {(byte) 0xc3, (byte) 0x28};
+        Files.write(file, original);
+        Storage storage = new Storage(file.toString());
+
+        assertTrue(storage.load().isEmpty());
+        assertTrue(storage.getLoadWarning().contains("saving is disabled"));
+        assertThrows(AndersException.class, () -> storage.save(new TaskList()));
+        assertArrayEquals(original, Files.readAllBytes(file));
+    }
+
+    @Test
+    public void save_missingParent_createsFileAfterEmptyStartup() throws Exception {
+        Path file = temporaryDirectory.resolve("new-data/tasks.txt");
+        Storage storage = new Storage(file.toString());
+        assertTrue(storage.load().isEmpty());
+        assertTrue(storage.getLoadWarning().isEmpty());
+
+        storage.save(new TaskList(List.of(new Todo("new task"))));
+
+        assertTrue(Files.isRegularFile(file));
+        assertEquals("new task", new Storage(file.toString()).load().getFirst().getDescription());
+    }
+
+    @Test
+    public void save_blockedParent_reportsUnsavedChangesAndCanRetry() throws Exception {
+        Path parent = temporaryDirectory.resolve("data");
+        Files.writeString(parent, "blocking file");
+        Storage storage = new Storage(parent.resolve("tasks.txt").toString());
+        TaskList tasks = new TaskList(List.of(new Todo("keep in memory")));
+
+        AndersException exception = assertThrows(AndersException.class, () -> storage.save(tasks));
+
+        assertTrue(exception.getMessage().contains("Changes are only available in this session"));
+        assertEquals("blocking file", Files.readString(parent));
+        Files.delete(parent);
+        storage.save(tasks);
+        assertEquals("keep in memory", storage.load().getFirst().getDescription());
+    }
+
 }

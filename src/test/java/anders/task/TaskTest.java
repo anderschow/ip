@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -143,8 +144,9 @@ public class TaskTest {
     }
 
     @Test
-    public void event_endBeforeStart_failsFastWithAssertion() {
-        assertThrows(AssertionError.class, () -> new Event("meeting", "2025-01-01 16:00", "2025-01-01 14:00"));
+    public void event_endBeforeStart_rejectsInvalidRange() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new Event("meeting", "2025-01-01 16:00", "2025-01-01 14:00"));
     }
 
     @Test
@@ -182,4 +184,23 @@ public class TaskTest {
         assertEquals("2025-01-02", event.getToText());
         assertEquals("[E] trip (from: Jan 01 2025 2.00 pm to: Jan 02 2025)", event.toString());
     }
+
+    @Test
+    public void dateParsing_impossibleDatesAndTimes_areRejected() {
+        for (String value : List.of("31/2/2026", "29/2/2025", "31/4/2026", "2/10/2026 2400")) {
+            assertThrows(DateTimeParseException.class, () -> new Deadline("report", value));
+            assertThrows(DateTimeParseException.class, () ->
+                    new Event("meeting", value, "2027-01-01"));
+        }
+        assertThrows(DateTimeParseException.class, () ->
+                new Event("meeting", "2026-02-30 1400", "2026-03-01"));
+    }
+
+    @Test
+    public void dateParsing_leapDayAndEqualEndpoints_areAccepted() {
+        assertEquals("29/2/2024", new Deadline("report", "29/2/2024").getByText());
+        Event event = new Event("reminder", "29/2/2024 1200", "29/2/2024 1200");
+        assertEquals(event.getFrom(), event.getTo());
+    }
+
 }

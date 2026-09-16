@@ -1,5 +1,6 @@
 package anders.command;
 
+import anders.AndersException;
 import anders.collection.TaskList;
 import anders.storage.Storage;
 import anders.task.Task;
@@ -15,7 +16,7 @@ public class AddCommand extends Command {
     }
     /** Adds the task, saves the updated list, and shows a confirmation. */
     @Override
-    public void execute(TaskList tasks, Ui ui, Storage storage) {
+    public void execute(TaskList tasks, Ui ui, Storage storage) throws AndersException {
         tasks.add(task);
         storage.save(tasks);
         ui.showTaskAdded(task, tasks.size());

@@ -85,7 +85,15 @@ public class MainWindow extends BorderPane {
 
     /** Creates the main GUI layout and connects it to the saved Anders session. */
     public MainWindow() {
-        this(new Anders()::getResponse);
+        this(new Anders());
+    }
+
+    /** Creates a window for a session and displays any startup storage warning. */
+    MainWindow(Anders anders) {
+        this(anders::getResponse);
+        if (!anders.getStartupWarning().isEmpty()) {
+            appendReply(anders.getStartupWarning());
+        }
     }
 
     /** Creates a window with a supplied responder so GUI tests do not touch saved tasks. */

@@ -1,5 +1,6 @@
 package anders.command;
 
+import anders.AndersException;
 import anders.collection.TaskList;
 import anders.storage.Storage;
 import anders.task.Task;
@@ -15,7 +16,7 @@ public class DeleteCommand extends Command {
     }
     /** Deletes the selected task when its user-facing number is valid. */
     @Override
-    public void execute(TaskList tasks, Ui ui, Storage storage) {
+    public void execute(TaskList tasks, Ui ui, Storage storage) throws AndersException {
         try {
             int index = Integer.parseInt(taskNumberText) - 1;
             if (index < 0 || index >= tasks.size()) {

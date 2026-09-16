@@ -1,7 +1,7 @@
 package anders;
 
 /**
- * Represents an invalid command entered by an Anders user.
+ * Represents a command or storage problem that can be explained to an Anders user.
  */
 public class AndersException extends Exception {
     /**

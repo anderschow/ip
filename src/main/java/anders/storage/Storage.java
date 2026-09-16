@@ -3,14 +3,17 @@ package anders.storage;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.DateTimeException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import anders.AndersException;
 import anders.collection.TaskList;
 import anders.task.Deadline;
 import anders.task.Event;
@@ -28,34 +31,61 @@ public class Storage {
     private static final String DONE_STATUS = "1";
 
     private final Path file;
+    private String loadWarning = "";
+    // Avoid overwriting existing data when the initial read failed.
+    private boolean isLoadBlocked;
 
     /** Creates storage backed by {@code filePath}. */
     public Storage(String filePath) {
         file = Path.of(filePath);
     }
 
-    /** Loads valid tasks from the file, ignoring malformed records. */
+    /** Loads valid tasks, starting empty for a missing file and recording other load problems. */
     public List<Task> load() {
         List<Task> tasks = new ArrayList<>();
-        if (!Files.exists(file)) {
-            return tasks;
-        }
+        loadWarning = "";
+        isLoadBlocked = false;
         try {
+            int invalidCount = 0;
             for (String line : Files.readAllLines(file, StandardCharsets.UTF_8)) {
                 Task task = parse(line);
                 if (task != null) {
                     tasks.add(task);
+                } else if (!line.isBlank()) {
+                    invalidCount++;
                 }
             }
+            if (invalidCount > 0) {
+                loadWarning = "Skipped " + invalidCount + " invalid saved task record(s) in " + file
+                        + ". Valid tasks are still available. Check the data file for missing tasks.";
+            }
+        } catch (NoSuchFileException e) {
+            // The first successful save creates the missing file and its parent directories.
         } catch (IOException | SecurityException e) {
-            // Ignore unreadable storage and start with no tasks.
+            isLoadBlocked = true;
+            loadWarning = "I couldn't read tasks from " + file
+                    + ". Starting with an empty list; saving is disabled to protect existing data."
+                    + " Check the data path and permissions, then restart Anders.";
         }
         return tasks;
     }
 
-    /** Saves the current tasks in the versioned encoded format. */
-    public void save(TaskList tasks) {
+    /** Returns a startup warning, or an empty string when loading succeeded or no file exists. */
+    public String getLoadWarning() {
+        return loadWarning;
+    }
+
+    /**
+     * Saves the current tasks in the versioned encoded format.
+     *
+     * @param tasks the current in-memory task list
+     * @throws AndersException if saving fails or loading failed earlier in this session
+     */
+    public void save(TaskList tasks) throws AndersException {
         assert tasks != null : "Storage must save a task list, not null";
+        if (isLoadBlocked) {
+            throw new AndersException("Changes are only available in this session. " + loadWarning);
+        }
         List<String> lines = new ArrayList<>();
         for (int i = 0; i < tasks.size(); i++) {
             Task task = tasks.get(i);
@@ -63,12 +93,16 @@ public class Storage {
             lines.add(serialize(task));
         }
         try {
-            Files.createDirectories(file.getParent());
+            if (file.getParent() != null) {
+                Files.createDirectories(file.getParent());
+            }
             Path temporary = file.resolveSibling(file.getFileName() + ".tmp");
             Files.write(temporary, lines, StandardCharsets.UTF_8);
             Files.move(temporary, file, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException | SecurityException e) {
-            // Ignore save failures; the in-memory task list remains usable.
+            throw new AndersException("I couldn't save tasks to " + file
+                    + ". Changes are only available in this session. Check the data path and permissions,"
+                    + " then try another task change to save again.");
         }
     }
 
@@ -85,7 +119,7 @@ public class Storage {
             }
 
             return parseLegacyRecord(line);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | DateTimeException e) {
             return null;
         }
     }

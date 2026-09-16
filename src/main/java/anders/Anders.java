@@ -31,6 +31,11 @@ public class Anders {
         tasks = new TaskList(storage.load());
     }
 
+    /** Returns any warning that the GUI should display after its welcome message. */
+    public String getStartupWarning() {
+        return storage.getLoadWarning();
+    }
+
     /** Processes one command and returns the output for display in a GUI. */
     public String getResponse(String input) {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -55,6 +60,9 @@ public class Anders {
         TaskList tasks = new TaskList(storage.load());
 
         ui.showWelcome();
+        if (!storage.getLoadWarning().isEmpty()) {
+            ui.showError(storage.getLoadWarning());
+        }
         boolean isExit = false;
         while (!isExit && ui.hasNextCommand()) {
             try {

@@ -5,7 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.PrintStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -46,4 +48,37 @@ public class AndersTest {
         assertTrue(bot.getResponse("list").contains("1.[T][ ] keep this task"));
         assertSame(originalOutput, System.out);
     }
+
+    @Test
+    public void getResponse_commonMistakes_preservesTasksAndAcceptsNextCommand() {
+        Storage storage = new Storage(temporaryDirectory.resolve("tasks.txt").toString());
+        Anders bot = new Anders(storage);
+        bot.getResponse("todo keep this task");
+        for (String command : List.of("unknown", "todo", "deadline report /by 31/2/2026",
+                "event meeting /from 2026-10-02 1600 /to 2026-10-02 1400", "mark abc", "delete 0",
+                "unmark 999999999999999999999", "tag 1 invalid")) {
+            assertTrue(bot.getResponse(command).startsWith("A little fog on the path."), command);
+            assertEquals(1, storage.load().size(), command);
+            assertTrue(bot.getResponse("list").contains("1.[T][ ] keep this task"), command);
+        }
+        assertTrue(bot.getResponse("todo next task").contains("Your trail holds 2 tasks."));
+    }
+
+    @Test
+    public void getResponse_saveFailure_explainsUnsavedStateAndAllowsRecovery() throws Exception {
+        Path parent = temporaryDirectory.resolve("data");
+        Storage storage = new Storage(parent.resolve("tasks.txt").toString());
+        Anders bot = new Anders(storage);
+        Files.writeString(parent, "blocking file");
+        for (String command : List.of("todo keep this task", "mark 1", "unmark 1", "tag 1 #school",
+                "untag 1 #school", "delete 1", "todo keep this task")) {
+            assertTrue(bot.getResponse(command).contains("Changes are only available in this session"), command);
+        }
+        assertTrue(bot.getResponse("list").contains("1.[T][ ] keep this task"));
+
+        Files.delete(parent);
+        assertTrue(bot.getResponse("todo another task").contains("Your trail holds 2 tasks."));
+        assertEquals(2, new Storage(parent.resolve("tasks.txt").toString()).load().size());
+    }
+
 }

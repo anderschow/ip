@@ -110,6 +110,59 @@ Each test case specifies its aim, commands, and expected output associated with 
       "aim": "Verify find displays matching task descriptions with their original list numbers.",
       "commands": ["todo read book", "deadline return book /by 2019-12-02", "todo revise notes", "find BOOK", "find NOTHING", "bye"],
       "expected": ["Your trail holds 1 task.", "Your trail holds 2 tasks.", "Your trail holds 3 tasks.", "1.[T][ ] read book\n     2.[D][ ] return book (by: Dec 02 2019)", "No matching tasks found. Try another word or #tag.", "Rest well, wanderer. I'll keep the lantern lit."]
+    },
+    {
+      "name": "reject impossible dates and reversed events",
+      "aim": "Reject calendar and time mistakes without changing tasks, and accept a corrected command.",
+      "commands": [
+        "deadline report /by 31/2/2026",
+        "event meeting /from 2/10/2026 1600 /to 2/10/2026 1400",
+        "event meeting /from 2/10/2026 2400 /to 3/10/2026",
+        "list",
+        "todo corrected task",
+        "bye"
+      ],
+      "expected": [
+        "A deadline needs a real date",
+        "An event must end at or after it starts.",
+        "Event dates must be real dates",
+        "A clear path! No tasks yet.",
+        "Your trail holds 1 task.",
+        "Rest well, wanderer. I'll keep the lantern lit."
+      ]
+    },
+    {
+      "name": "recover from invalid saved dates",
+      "aim": "Show a startup warning, skip bad dates, and retain valid tasks on both sides of damaged records.",
+      "saved_file": "T | 0 | first task\nD | 0 | bad date | tomorrow\nE | 0 | reversed event | 2026-10-02 1600 | 2026-10-02 1400\nT | 0 | last task",
+      "commands": [
+        "list",
+        "list",
+        "todo next task",
+        "bye"
+      ],
+      "expected": [
+        "Skipped 2 invalid saved task record(s)",
+        "1.[T][ ] first task\n     2.[T][ ] last task",
+        "Your trail holds 3 tasks.",
+        "Rest well, wanderer. I'll keep the lantern lit."
+      ]
+    },
+    {
+      "name": "start without a data file",
+      "aim": "Start with an empty trail and create usable task storage after the first addition.",
+      "commands": [
+        "list",
+        "todo first task",
+        "list",
+        "bye"
+      ],
+      "expected": [
+        "A clear path! No tasks yet.",
+        "Your trail holds 1 task.",
+        "1.[T][ ] first task",
+        "Rest well, wanderer. I'll keep the lantern lit."
+      ]
     }
   ]
 }
@@ -134,6 +187,10 @@ For a manual pass, launch `gradlew.bat run` (or `./gradlew run`) and check:
 | Action | Expected result |
 | --- | --- |
 | Launch the app. | Title, header, greeting, and reply labels say Anders. The forest-green header, parchment replies, amber Send button, serif title, lantern bot icons, compass user icons, and window icon render clearly. |
+| Start with no data file, then add a task and restart. | Anders starts empty and reloads the newly saved task. |
+| Start with malformed saved dates or an unreadable data file. | A visible warning explains the problem; valid records load. Unreadable files are protected from overwrite. |
+| Submit an impossible date or an event ending before it starts, then a valid command. | An actionable error appears; the next command still works. |
+| Make the data path unwritable after launch and change a task. | The reply explains that changes are only available in this session and how to retry saving. |
 | Open the window and resize it down to its minimum size. | Input stays visible; messages wrap; no horizontal scrolling or clipped text. |
 | Type spaces only, then press Enter. | Send stays disabled and no message is added. |
 | Send `todo read chapter 1` using Enter, then send `list` with Send. | Each command runs once; input clears and regains focus. |

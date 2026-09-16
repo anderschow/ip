@@ -163,7 +163,7 @@ public class Parser {
         try {
             parseTask(command);
         } catch (DateTimeParseException e) {
-            throw new AndersException("A deadline must use d/M/yyyy, d/M/yyyy HHmm, or yyyy-MM-dd format.");
+            throw new AndersException("A deadline needs a real date in d/M/yyyy, d/M/yyyy HHmm, or yyyy-MM-dd format.");
         }
     }
 
@@ -175,7 +175,10 @@ public class Parser {
         try {
             parseTask(command);
         } catch (DateTimeParseException e) {
-            throw new AndersException("Event dates must use yyyy-MM-dd or d/M/yyyy, optionally followed by HHmm.");
+            throw new AndersException("Event dates must be real dates in yyyy-MM-dd or d/M/yyyy,"
+                    + " optionally followed by HHmm.");
+        } catch (IllegalArgumentException e) {
+            throw new AndersException(e.getMessage());
         }
     }
 

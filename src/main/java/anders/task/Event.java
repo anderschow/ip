@@ -4,16 +4,21 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 import java.util.List;
 import java.util.Locale;
 
 /** Represents a task scheduled between a start time and an end time. */
 public class Event extends Task {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE;
-    private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm");
-    private static final DateTimeFormatter LEGACY_DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-    private static final DateTimeFormatter INPUT_DATE_FORMAT = DateTimeFormatter.ofPattern("d/M/yyyy");
-    private static final DateTimeFormatter INPUT_DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("d/M/yyyy HHmm");
+    private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("uuuu-MM-dd HHmm")
+            .withResolverStyle(ResolverStyle.STRICT);
+    private static final DateTimeFormatter LEGACY_DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm")
+            .withResolverStyle(ResolverStyle.STRICT);
+    private static final DateTimeFormatter INPUT_DATE_FORMAT = DateTimeFormatter.ofPattern("d/M/uuuu")
+            .withResolverStyle(ResolverStyle.STRICT);
+    private static final DateTimeFormatter INPUT_DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("d/M/uuuu HHmm")
+            .withResolverStyle(ResolverStyle.STRICT);
     private static final DateTimeFormatter DISPLAY_DATE_FORMAT = DateTimeFormatter.ofPattern("MMM dd yyyy");
     private static final DateTimeFormatter DISPLAY_TIME_FORMAT = DateTimeFormatter.ofPattern("h.mm a", Locale.ENGLISH);
     private static final List<DateTimeFormatter> DATE_TIME_FORMATS = List.of(
@@ -30,6 +35,8 @@ public class Event extends Task {
      * @param description the task description
      * @param from the event start date/time in yyyy-MM-dd or yyyy-MM-dd HHmm format
      * @param to the event end date/time in yyyy-MM-dd or yyyy-MM-dd HHmm format
+     * @throws DateTimeParseException if either endpoint is not a valid date/time
+     * @throws IllegalArgumentException if the event ends before it starts
      */
     public Event(String description, String from, String to) {
         super(description);
@@ -39,7 +46,9 @@ public class Event extends Task {
         this.to = parsedTo.value;
         this.hasFromTime = parsedFrom.hasTime;
         this.hasToTime = parsedTo.hasTime;
-        assert !this.from.isAfter(this.to) : "An event must end at or after it starts";
+        if (this.from.isAfter(this.to)) {
+            throw new IllegalArgumentException("An event must end at or after it starts.");
+        }
     }
 
     /** @return the event start date and time */

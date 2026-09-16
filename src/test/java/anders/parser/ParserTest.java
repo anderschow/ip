@@ -152,4 +152,17 @@ public class ParserTest {
         assertThrows(AndersException.class, () -> parser.validate("tag 1 #fun #"));
         assertThrows(AndersException.class, () -> parser.validate("find #fun!"));
     }
+
+    @Test
+    public void parse_invalidDatesAndReversedEvents_returnsHelpfulErrors() {
+        AndersException invalidDate = assertThrows(AndersException.class, () ->
+                Parser.parse("deadline report /by 31/2/2026"));
+        assertTrue(invalidDate.getMessage().contains("real date"));
+        AndersException invalidEvent = assertThrows(AndersException.class, () ->
+                Parser.parse("event meeting /from 2026-10-02 1600 /to 2026-10-02 1400"));
+        assertEquals("An event must end at or after it starts.", invalidEvent.getMessage());
+        assertThrows(AndersException.class, () ->
+                Parser.parse("event meeting /from 2/10/2026 /to 31/11/2026"));
+    }
+
 }
