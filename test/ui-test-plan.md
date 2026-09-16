@@ -122,6 +122,13 @@ real FXML and CSS, checks input submission and history, draft preservation, narr
 layouts, long-word wrapping, and scrolling. It saves actual JavaFX previews under
 `build/reports/gui/` at 360, 460, and 720 pixels wide.
 
+For headless Linux CI, run `xvfb-run --auto-servernum ./gradlew check` with
+Java 25 and Xvfb installed. This provides a virtual display for the JavaFX tests.
+The workflow uses this command only on Linux; macOS and Windows run
+`./gradlew check` directly. Each job has a 10-minute timeout so a stalled GUI
+toolkit cannot keep CI running indefinitely. After pushing a workflow change,
+check the new run: all three platform jobs should finish successfully.
+
 For a manual pass, launch `gradlew.bat run` (or `./gradlew run`) and check:
 
 | Action | Expected result |

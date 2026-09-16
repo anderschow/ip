@@ -4,6 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build:
+    timeout-minutes: 10
     strategy:
       matrix:
         platform: [ubuntu-latest, macos-latest, windows-latest]
@@ -23,5 +24,11 @@ jobs:
           java-version: '25'
           java-package: jdk+fx
 
+      # JavaFX GUI tests need a display even when the runner has no desktop session.
+      - name: Build and check with Gradle on Linux
+        if: runner.os == 'Linux'
+        run: xvfb-run --auto-servernum ./gradlew check
+
       - name: Build and check with Gradle
+        if: runner.os != 'Linux'
         run: ./gradlew check
