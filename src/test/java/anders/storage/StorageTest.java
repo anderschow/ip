@@ -3,11 +3,13 @@ package anders.storage;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -181,6 +183,36 @@ public class StorageTest {
         Files.delete(parent);
         storage.save(tasks);
         assertEquals("keep in memory", storage.load().getFirst().getDescription());
+    }
+
+    @Test
+    public void save_isoDeadlineTimes_preservesTimesTagsAndStatusAfterReload() throws Exception {
+        Path file = temporaryDirectory.resolve("deadlines.txt");
+        List<String> values = List.of("2026-10-02 1800", "2026-10-02 18:00",
+                "2026-10-02 0000", "2026-10-02 00:00");
+        TaskList tasks = new TaskList();
+        for (String value : values) {
+            Deadline deadline = new Deadline("submit report", value);
+            deadline.addTags(List.of("#school"));
+            deadline.markAsDone();
+            tasks.add(deadline);
+        }
+
+        new Storage(file.toString()).save(tasks);
+
+        Storage reopenedStorage = new Storage(file.toString());
+        List<Task> loaded = reopenedStorage.load();
+        assertEquals(values.size(), loaded.size());
+        assertTrue(reopenedStorage.getLoadWarning().isEmpty());
+        for (int i = 0; i < loaded.size(); i++) {
+            Deadline deadline = assertInstanceOf(Deadline.class, loaded.get(i));
+            int hour = i < 2 ? 18 : 0;
+            assertEquals(LocalDateTime.of(2026, 10, 2, hour, 0), deadline.getBy());
+            assertEquals(values.get(i), deadline.getByText());
+            assertEquals(tasks.get(i).toString(), deadline.toString());
+            assertEquals(List.of("#school"), deadline.getTags());
+            assertTrue(deadline.isDone());
+        }
     }
 
 }

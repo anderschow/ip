@@ -163,7 +163,8 @@ public class Parser {
         try {
             parseTask(command);
         } catch (DateTimeParseException e) {
-            throw new AndersException("A deadline needs a real date in d/M/yyyy, d/M/yyyy HHmm, or yyyy-MM-dd format.");
+            throw new AndersException("A deadline needs a real date in d/M/yyyy or yyyy-MM-dd format,"
+                    + " optionally followed by HHmm. yyyy-MM-dd also accepts HH:mm.");
         }
     }
 

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
@@ -187,7 +188,9 @@ public class TaskTest {
 
     @Test
     public void dateParsing_impossibleDatesAndTimes_areRejected() {
-        for (String value : List.of("31/2/2026", "29/2/2025", "31/4/2026", "2/10/2026 2400")) {
+        for (String value : List.of("31/2/2026", "29/2/2025", "31/4/2026", "2/10/2026 2400",
+                "2026-02-30 1800", "2026-02-30 18:00", "2025-02-29 1800", "2025-02-29 18:00",
+                "2026-10-02 2400", "2026-10-02 24:00", "2026-10-02 1860", "2026-10-02 18:60")) {
             assertThrows(DateTimeParseException.class, () -> new Deadline("report", value));
             assertThrows(DateTimeParseException.class, () ->
                     new Event("meeting", value, "2027-01-01"));
@@ -199,8 +202,44 @@ public class TaskTest {
     @Test
     public void dateParsing_leapDayAndEqualEndpoints_areAccepted() {
         assertEquals("29/2/2024", new Deadline("report", "29/2/2024").getByText());
+        for (String value : List.of("2024-02-29 2359", "2024-02-29 23:59")) {
+            assertEquals(LocalDateTime.of(2024, 2, 29, 23, 59), new Deadline("report", value).getBy(), value);
+        }
         Event event = new Event("reminder", "29/2/2024 1200", "29/2/2024 1200");
         assertEquals(event.getFrom(), event.getTo());
+    }
+
+    @Test
+    public void deadline_supportedDateTimes_preservesValueDisplayAndStorage() {
+        for (String value : List.of("2/10/2026 1800", "2026-10-02 1800", "2026-10-02 18:00")) {
+            Deadline deadline = new Deadline("report", value);
+
+            assertEquals(LocalDateTime.of(2026, 10, 2, 18, 0), deadline.getBy(), value);
+            assertEquals("[D] report (by: Oct 02 2026 6.00 pm)", deadline.toString(), value);
+            assertEquals(value, deadline.getByText());
+        }
+    }
+
+    @Test
+    public void deadline_dateOnly_preservesDateOnlyDisplayAndStorage() {
+        for (String value : List.of("2/10/2026", "2026-10-02")) {
+            Deadline deadline = new Deadline("report", value);
+
+            assertEquals(LocalDateTime.of(2026, 10, 2, 0, 0), deadline.getBy(), value);
+            assertEquals("[D] report (by: Oct 02 2026)", deadline.toString(), value);
+            assertEquals(value, deadline.getByText());
+        }
+    }
+
+    @Test
+    public void deadline_explicitMidnight_preservesTimeDisplayAndStorage() {
+        for (String value : List.of("2/10/2026 0000", "2026-10-02 0000", "2026-10-02 00:00")) {
+            Deadline deadline = new Deadline("report", value);
+
+            assertEquals(LocalDateTime.of(2026, 10, 2, 0, 0), deadline.getBy(), value);
+            assertEquals("[D] report (by: Oct 02 2026 12.00 am)", deadline.toString(), value);
+            assertEquals(value, deadline.getByText());
+        }
     }
 
 }

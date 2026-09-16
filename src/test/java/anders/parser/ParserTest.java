@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -163,6 +164,33 @@ public class ParserTest {
         assertEquals("An event must end at or after it starts.", invalidEvent.getMessage());
         assertThrows(AndersException.class, () ->
                 Parser.parse("event meeting /from 2/10/2026 /to 31/11/2026"));
+    }
+
+    @Test
+    public void parse_isoDeadlineTimes_acceptsBothFormatsWithTags() throws AndersException {
+        for (String value : List.of("2026-10-02 1800", "2026-10-02 18:00")) {
+            String input = "deadline submit report /by " + value + " /tags #School";
+
+            assertInstanceOf(AddCommand.class, Parser.parse(input));
+            Deadline deadline = assertInstanceOf(Deadline.class, parser.parseTask(input));
+            assertEquals("submit report", deadline.getDescription());
+            assertEquals(LocalDateTime.of(2026, 10, 2, 18, 0), deadline.getBy());
+            assertEquals(List.of("#school"), deadline.getTags());
+        }
+    }
+
+    @Test
+    public void parse_invalidIsoDeadlineTimes_returnsHelpfulErrors() {
+        for (String value : List.of("2026-02-30 1800", "2026-02-30 18:00",
+                "2026-10-02 2400", "2026-10-02 18:60")) {
+            AndersException exception = assertThrows(AndersException.class, () ->
+                    Parser.parse("deadline report /by " + value));
+
+            assertTrue(exception.getMessage().contains("real date"));
+            assertTrue(exception.getMessage().contains("yyyy-MM-dd"));
+            assertTrue(exception.getMessage().contains("HHmm"));
+            assertTrue(exception.getMessage().contains("HH:mm"));
+        }
     }
 
 }

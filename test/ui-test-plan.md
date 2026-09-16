@@ -51,6 +51,55 @@ Each test case specifies its aim, commands, and expected output associated with 
       "expected": ["[D] return book (by: Dec 02 2019)", "1.[D][ ] return book (by: Dec 02 2019)", "Rest well, wanderer. I'll keep the lantern lit."]
     },
     {
+      "name": "add and list ISO deadline times",
+      "aim": "Accept compact and colon-separated ISO deadline times with tags and display both correctly.",
+      "commands": [
+        "deadline compact report /by 2026-10-02 1800 /tags #School",
+        "deadline colon report /by 2026-10-02 18:00",
+        "list",
+        "bye"
+      ],
+      "expected": [
+        "[D] compact report (by: Oct 02 2026 6.00 pm) (tags: #school)",
+        "[D] colon report (by: Oct 02 2026 6.00 pm)",
+        "1.[D][ ] compact report (by: Oct 02 2026 6.00 pm) (tags: #school)\n     2.[D][ ] colon report (by: Oct 02 2026 6.00 pm)",
+        "Rest well, wanderer. I'll keep the lantern lit."
+      ]
+    },
+    {
+      "name": "reject invalid ISO deadline times",
+      "aim": "Reject impossible dates and times in both new formats without adding tasks.",
+      "commands": [
+        "deadline report /by 2026-02-30 1800",
+        "deadline report /by 2026-02-30 18:00",
+        "deadline report /by 2026-10-02 2400",
+        "deadline report /by 2026-10-02 18:60",
+        "list",
+        "bye"
+      ],
+      "expected": [
+        "A deadline needs a real date",
+        "A deadline needs a real date",
+        "A deadline needs a real date",
+        "A deadline needs a real date",
+        "A clear path! No tasks yet.",
+        "Rest well, wanderer. I'll keep the lantern lit."
+      ]
+    },
+    {
+      "name": "load saved ISO deadline times",
+      "aim": "Load both ISO deadline time formats from saved records and preserve explicit midnight.",
+      "saved_file": "D | 0 | compact report | 2026-10-02 1800\nD | 1 | midnight report | 2026-10-02 00:00",
+      "commands": [
+        "list",
+        "bye"
+      ],
+      "expected": [
+        "1.[D][ ] compact report (by: Oct 02 2026 6.00 pm)\n     2.[D][X] midnight report (by: Oct 02 2026 12.00 am)",
+        "Rest well, wanderer. I'll keep the lantern lit."
+      ]
+    },
+    {
       "name": "handle invalid commands",
       "aim": "Verify empty todo, deadline, and event descriptions plus unknown commands produce helpful errors without ending the session.",
       "commands": ["", "todo", "deadline", "event", "mark", "unmark", "blah", "bye"],
