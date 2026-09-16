@@ -70,10 +70,10 @@ public class Ui {
         boolean hasMatch = false;
         for (int i = 0; i < tasks.size(); i++) {
             Task task = tasks.get(i);
-            boolean matches = keyword.startsWith("#")
+            boolean isMatch = keyword.startsWith("#")
                     ? task.hasTag(keyword)
                     : task.getDescription().toLowerCase(Locale.ROOT).contains(searchText);
-            if (matches) {
+            if (isMatch) {
                 hasMatch = true;
                 System.out.println("     " + (i + 1) + "." + formatTask(task));
             }
@@ -90,21 +90,32 @@ public class Ui {
         System.out.println("     Now you have " + taskCount + " tasks in the list.");
     }
 
-    /** Displays a task status change confirmation. */
-    public void showMarked(Task task, boolean done) {
-        System.out.println(done ? "     Nice! I've marked this task as done:"
+    /**
+     * Displays a task status change confirmation.
+     *
+     * @param task the task whose status changed
+     * @param isDone whether the task is now marked as done
+     */
+    public void showMarked(Task task, boolean isDone) {
+        System.out.println(isDone ? "     Nice! I've marked this task as done:"
                 : "     OK, I've marked this task as not done yet:");
-        System.out.println("       [" + (done ? "X" : " ") + "] " + task.getDescription()
+        System.out.println("       [" + (isDone ? "X" : " ") + "] " + task.getDescription()
                 + task.getTagsDisplayText());
     }
 
-    /** Displays the result of adding or removing tags from a task. */
-    public void showTagUpdate(Task task, boolean adding, boolean changed) {
-        if (adding) {
-            System.out.println(changed ? "     Nice! I've tagged this task:"
+    /**
+     * Displays the result of adding or removing tags from a task.
+     *
+     * @param task the task whose tags were selected for an update
+     * @param isAdding whether the command adds tags rather than removes them
+     * @param hasChanged whether at least one tag was added or removed
+     */
+    public void showTagUpdate(Task task, boolean isAdding, boolean hasChanged) {
+        if (isAdding) {
+            System.out.println(hasChanged ? "     Nice! I've tagged this task:"
                     : "     This task already has these tags:");
         } else {
-            System.out.println(changed ? "     OK, I've removed these tags from this task:"
+            System.out.println(hasChanged ? "     OK, I've removed these tags from this task:"
                     : "     This task does not have these tags:");
         }
         System.out.println("       " + formatTask(task));

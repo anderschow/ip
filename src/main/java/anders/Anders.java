@@ -43,7 +43,8 @@ public class Anders {
     }
 
     /** Starts Anders and processes commands until the user exits or input ends. */
-    public static void main(String[] args) {
+    public static void main(String[] args)
+    {
         Ui ui = new Ui();
         Storage storage = new Storage("data/anders.txt");
 

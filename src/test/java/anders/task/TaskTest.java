@@ -9,7 +9,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-/** Tests the completion-status behavior of {@link Task}. */
+/** Tests task completion, tags, and date/time formatting. */
 public class TaskTest {
 
     @Test
@@ -145,5 +145,41 @@ public class TaskTest {
     @Test
     public void event_endBeforeStart_failsFastWithAssertion() {
         assertThrows(AssertionError.class, () -> new Event("meeting", "2025-01-01 16:00", "2025-01-01 14:00"));
+    }
+
+    @Test
+    public void event_dateOnlyEndpoints_preservesDateOnlyDisplayAndStorage() {
+        Event event = new Event("trip", "2025-01-01", "2025-01-02");
+
+        assertEquals("2025-01-01", event.getFromText());
+        assertEquals("2025-01-02", event.getToText());
+        assertEquals("[E] trip (from: Jan 01 2025 to: Jan 02 2025)", event.toString());
+    }
+
+    @Test
+    public void event_explicitMidnightEndpoints_preservesBothTimes() {
+        Event event = new Event("trip", "2025-01-01 0000", "2025-01-02 0000");
+
+        assertEquals("2025-01-01 0000", event.getFromText());
+        assertEquals("2025-01-02 0000", event.getToText());
+        assertEquals("[E] trip (from: Jan 01 2025 12.00 am to: Jan 02 2025 12.00 am)", event.toString());
+    }
+
+    @Test
+    public void event_onlyEndHasTime_preservesEndpointPrecision() {
+        Event event = new Event("trip", "2025-01-01", "2025-01-02 1600");
+
+        assertEquals("2025-01-01", event.getFromText());
+        assertEquals("2025-01-02 1600", event.getToText());
+        assertEquals("[E] trip (from: Jan 01 2025 to: Jan 02 2025 4.00 pm)", event.toString());
+    }
+
+    @Test
+    public void event_onlyStartHasTime_preservesEndpointPrecision() {
+        Event event = new Event("trip", "2025-01-01 1400", "2025-01-02");
+
+        assertEquals("2025-01-01 1400", event.getFromText());
+        assertEquals("2025-01-02", event.getToText());
+        assertEquals("[E] trip (from: Jan 01 2025 2.00 pm to: Jan 02 2025)", event.toString());
     }
 }

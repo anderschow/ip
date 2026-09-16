@@ -21,8 +21,8 @@ public class Event extends Task {
     private static final List<DateTimeFormatter> DATE_FORMATS = List.of(DATE_FORMAT, INPUT_DATE_FORMAT);
     private final LocalDateTime from;
     private final LocalDateTime to;
-    private final boolean fromHasTime;
-    private final boolean toHasTime;
+    private final boolean hasFromTime;
+    private final boolean hasToTime;
 
     /**
      * Creates a new unfinished event task.
@@ -37,8 +37,8 @@ public class Event extends Task {
         ParsedDateTime parsedTo = parseDateTime(to);
         this.from = parsedFrom.value;
         this.to = parsedTo.value;
-        this.fromHasTime = parsedFrom.hasTime;
-        this.toHasTime = parsedTo.hasTime;
+        this.hasFromTime = parsedFrom.hasTime;
+        this.hasToTime = parsedTo.hasTime;
         assert !this.from.isAfter(this.to) : "An event must end at or after it starts";
     }
 
@@ -55,20 +55,20 @@ public class Event extends Task {
     /** Returns the display text for this event task. */
     @Override
     public String toString() {
-        String fromText = formatForDisplay(from, fromHasTime);
-        String toText = formatForDisplay(to, toHasTime);
+        String fromText = formatForDisplay(from, hasFromTime);
+        String toText = formatForDisplay(to, hasToTime);
         return "[E] " + super.toString() + " (from: " + fromText + " to: " + toText + ")"
                 + getTagsDisplayText();
     }
 
     /** Returns the canonical start value used for persistence. */
     public String getFromText() {
-        return from.format(fromHasTime ? DATE_TIME_FORMAT : DATE_FORMAT);
+        return from.format(hasFromTime ? DATE_TIME_FORMAT : DATE_FORMAT);
     }
 
     /** Returns the canonical end value used for persistence. */
     public String getToText() {
-        return to.format(toHasTime ? DATE_TIME_FORMAT : DATE_FORMAT);
+        return to.format(hasToTime ? DATE_TIME_FORMAT : DATE_FORMAT);
     }
 
     private static String formatForDisplay(LocalDateTime dateTime, boolean hasTime) {
@@ -96,6 +96,7 @@ public class Event extends Task {
         throw lastError;
     }
 
+    /** Stores a parsed date/time and whether the input explicitly included a time. */
     private record ParsedDateTime(LocalDateTime value, boolean hasTime) {
     }
 }

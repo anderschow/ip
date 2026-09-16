@@ -1,5 +1,7 @@
 package anders.ui;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -87,13 +89,67 @@ public class UiTest {
         String output = capturedOutput.toString();
         assertTrue(output.contains("1.[T][ ] read book (tags: #fun)"));
         assertTrue(output.contains("2.[T][ ] revise notes (tags: #fun)"));
-        assertTrue(!output.contains("3.[T][ ] have fun (tags: #funny)"));
+        assertFalse(output.contains("3.[T][ ] have fun (tags: #funny)"));
     }
 
+    @Test
     public void showTaskList_taskWithoutTypePrefix_failsFastWithAssertion() {
         TaskList tasks = new TaskList();
         tasks.add(new Task("plain task"));
 
         assertThrows(AssertionError.class, () -> new Ui().showTaskList(tasks));
+    }
+
+    @Test
+    public void showMatchingTasks_descriptionKeyword_matchesCaseInsensitively() {
+        TaskList tasks = new TaskList();
+        tasks.add(new Todo("revise notes"));
+        tasks.add(new Todo("read book"));
+
+        new Ui().showMatchingTasks(tasks, "BOOK");
+
+        String output = capturedOutput.toString();
+        assertTrue(output.contains("2.[T][ ] read book"));
+        assertFalse(output.contains("revise notes"));
+        assertFalse(output.contains("No matching tasks found."));
+    }
+
+    @Test
+    public void showMarked_bothStatuses_displaysMatchingMessageAndIcon() {
+        Task task = new Todo("read book");
+        task.addTags(List.of("#fun"));
+        Ui ui = new Ui();
+
+        task.markAsDone();
+        ui.showMarked(task, true);
+        assertEquals("Nice! I've marked this task as done:" + System.lineSeparator()
+                + "       [X] read book (tags: #fun)", capturedOutput.toString().trim());
+
+        capturedOutput.reset();
+        task.markAsNotDone();
+        ui.showMarked(task, false);
+        assertEquals("OK, I've marked this task as not done yet:" + System.lineSeparator()
+                + "       [ ] read book (tags: #fun)", capturedOutput.toString().trim());
+    }
+
+    @Test
+    public void showTagUpdate_eachOutcome_displaysMatchingConfirmation() {
+        Task task = new Todo("read book");
+        Ui ui = new Ui();
+
+        ui.showTagUpdate(task, true, true);
+        assertTrue(capturedOutput.toString().contains("Nice! I've tagged this task:"));
+
+        capturedOutput.reset();
+        ui.showTagUpdate(task, true, false);
+        assertTrue(capturedOutput.toString().contains("This task already has these tags:"));
+
+        capturedOutput.reset();
+        ui.showTagUpdate(task, false, true);
+        assertTrue(capturedOutput.toString().contains("OK, I've removed these tags from this task:"));
+
+        capturedOutput.reset();
+        ui.showTagUpdate(task, false, false);
+        assertTrue(capturedOutput.toString().contains("This task does not have these tags:"));
     }
 }

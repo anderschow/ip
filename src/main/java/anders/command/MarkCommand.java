@@ -7,13 +7,19 @@ import anders.ui.Ui;
 /** Changes the completion state of a selected task. */
 public class MarkCommand extends Command {
     private final String taskNumberText;
-    private final boolean done;
+    private final boolean isDone;
 
-    /** Creates a mark or unmark command. */
-    public MarkCommand(String taskNumberText, boolean done) {
+    /**
+     * Creates a mark or unmark command.
+     *
+     * @param taskNumberText the one-based task number supplied by the user
+     * @param isDone whether the task should be marked as done
+     */
+    public MarkCommand(String taskNumberText, boolean isDone) {
         this.taskNumberText = taskNumberText;
-        this.done = done;
+        this.isDone = isDone;
     }
+
     /** Updates the selected task's completion state and saves the task list. */
     @Override
     public void execute(TaskList tasks, Ui ui, Storage storage) {
@@ -23,13 +29,13 @@ public class MarkCommand extends Command {
                 ui.showInvalidTaskNumber(tasks.size());
                 return;
             }
-            if (done) {
+            if (isDone) {
                 tasks.get(index).markAsDone();
             } else {
                 tasks.get(index).markAsNotDone();
             }
             storage.save(tasks);
-            ui.showMarked(tasks.get(index), done);
+            ui.showMarked(tasks.get(index), isDone);
         } catch (NumberFormatException e) {
             ui.showInvalidTaskNumberFormat();
         }

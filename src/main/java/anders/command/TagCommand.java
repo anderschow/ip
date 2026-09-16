@@ -12,14 +12,19 @@ import anders.ui.Ui;
 public class TagCommand extends Command {
     private final String taskNumberText;
     private final List<String> tags;
-    private final boolean adding;
+    private final boolean isAdding;
 
-    /** Creates a command that adds or removes the supplied tags. */
-    public TagCommand(String arguments, boolean adding) {
+    /**
+     * Creates a command that adds or removes the supplied tags.
+     *
+     * @param arguments the one-based task number followed by tags
+     * @param isAdding whether to add the tags rather than remove them
+     */
+    public TagCommand(String arguments, boolean isAdding) {
         String[] fields = arguments.trim().split("\\s+");
         this.taskNumberText = fields[0];
         this.tags = List.copyOf(Arrays.asList(Arrays.copyOfRange(fields, 1, fields.length)));
-        this.adding = adding;
+        this.isAdding = isAdding;
     }
 
     /** Applies the tag changes to the selected task and saves successful changes. */
@@ -32,11 +37,11 @@ public class TagCommand extends Command {
                 return;
             }
             Task task = tasks.get(index);
-            boolean changed = adding ? task.addTags(tags) : task.removeTags(tags);
-            if (changed) {
+            boolean hasChanged = isAdding ? task.addTags(tags) : task.removeTags(tags);
+            if (hasChanged) {
                 storage.save(tasks);
             }
-            ui.showTagUpdate(task, adding, changed);
+            ui.showTagUpdate(task, isAdding, hasChanged);
         } catch (NumberFormatException e) {
             ui.showInvalidTaskNumberFormat();
         }
