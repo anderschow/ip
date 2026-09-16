@@ -3,6 +3,7 @@ package anders;
 import java.io.IOException;
 import java.util.List;
 
+import anders.ui.Ui;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
@@ -10,8 +11,6 @@ import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.HBox;
@@ -21,19 +20,16 @@ import javafx.scene.text.TextFlow;
 
 /** Represents a wrapping, copyable message in the Anders conversation. */
 public class DialogBox extends HBox {
-    private static final Image USER_IMAGE = loadImage("/images/DaUser.png");
-    private static final Image ANDERS_IMAGE = loadImage("/images/DaDuke.png");
-
     @FXML
     private Label speaker;
     @FXML
     private Label message;
     @FXML
-    private ImageView avatar;
+    private ProfileIcon avatar;
     @FXML
     private VBox bubble;
 
-    private DialogBox(String speakerText, String messageText, Image image, boolean isUser) {
+    private DialogBox(String speakerText, String messageText, boolean isUser) {
         try {
             FXMLLoader loader = new FXMLLoader(DialogBox.class.getResource("/view/DialogBox.fxml"));
             loader.setRoot(this);
@@ -45,10 +41,10 @@ public class DialogBox extends HBox {
         speaker.setText(speakerText);
         // Console indentation wastes space in a narrow message bubble.
         message.setText(isUser ? messageText : messageText.replaceAll("(?m)^ +", ""));
-        avatar.setImage(image);
-        getStyleClass().add(isUser ? "user-dialog" : "anders-dialog");
+        avatar.setUser(isUser);
+        getStyleClass().add(isUser ? "user-dialog" : "bot-dialog");
         setAlignment(isUser ? Pos.TOP_RIGHT : Pos.TOP_LEFT);
-        bubble.maxWidthProperty().bind(widthProperty().subtract(32).multiply(isUser ? 0.9 : 1));
+        bubble.maxWidthProperty().bind(widthProperty().subtract(40).multiply(isUser ? 0.9 : 1));
         if (isUser) {
             getChildren().setAll(bubble, avatar);
         }
@@ -69,7 +65,7 @@ public class DialogBox extends HBox {
      * @return a compact user message
      */
     public static DialogBox getUserDialog(String message) {
-        return new DialogBox("You", message, USER_IMAGE, true);
+        return new DialogBox("You", message, true);
     }
 
     /**
@@ -78,8 +74,8 @@ public class DialogBox extends HBox {
      * @param message the reply to display
      * @return a wrapping reply with console indentation removed
      */
-    public static DialogBox getAndersDialog(String message) {
-        return new DialogBox("Anders", message, ANDERS_IMAGE, false);
+    public static DialogBox getBotDialog(String message) {
+        return new DialogBox(Ui.NAME, message, false);
     }
 
     /**
@@ -89,8 +85,8 @@ public class DialogBox extends HBox {
      * @param headings the complete lines to emphasize
      * @return a reply with only the supplied headings in bold
      */
-    public static DialogBox getAndersDialog(String message, List<String> headings) {
-        DialogBox dialog = getAndersDialog(message);
+    public static DialogBox getBotDialog(String message, List<String> headings) {
+        DialogBox dialog = getBotDialog(message);
         dialog.emphasizeHeadings(headings);
         return dialog;
     }
@@ -112,7 +108,4 @@ public class DialogBox extends HBox {
         message.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
     }
 
-    private static Image loadImage(String path) {
-        return new Image(DialogBox.class.getResourceAsStream(path));
-    }
 }

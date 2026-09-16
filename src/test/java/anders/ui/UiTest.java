@@ -35,13 +35,70 @@ public class UiTest {
     }
 
     @Test
+    public void showWelcome_andGoodbye_introduceLanternKeeper() {
+        Ui ui = new Ui();
+        ui.showWelcome();
+        ui.showGoodbye();
+
+        String output = capturedOutput.toString();
+        assertTrue(output.contains("Anders | Your lantern keeper"));
+        assertTrue(output.contains("Hello, wanderer. I'm Anders, your lantern keeper."));
+        assertTrue(output.contains("One task at a time; we'll find the way."));
+        assertTrue(output.contains("Rest well, wanderer. I'll keep the lantern lit."));
+    }
+
+    @Test
+    public void showTaskList_emptyList_suggestsFirstCommand() {
+        new Ui().showTaskList(new TaskList());
+
+        assertEquals("A clear path! No tasks yet. Try: todo read chapter 1", capturedOutput.toString().trim());
+    }
+
+    @Test
+    public void showTaskAdded_andDeleted_useAccurateTaskCounts() {
+        Ui ui = new Ui();
+        Task task = new Todo("read book");
+        ui.showTaskAdded(task, 1);
+        assertTrue(capturedOutput.toString().contains("A new trail marker. I've added this task:"));
+        assertTrue(capturedOutput.toString().contains("Your trail holds 1 task."));
+
+        capturedOutput.reset();
+        ui.showTaskAdded(task, 2);
+        assertTrue(capturedOutput.toString().contains("Your trail holds 2 tasks."));
+
+        capturedOutput.reset();
+        ui.showDeleted(task, 0);
+        assertTrue(capturedOutput.toString().contains("Path cleared. I've removed this task:"));
+        assertTrue(capturedOutput.toString().contains("[T][ ] read book"));
+        assertTrue(capturedOutput.toString().contains("Your trail holds 0 tasks."));
+    }
+
+    @Test
+    public void showError_invalidTaskNumbers_offerRecoveryWithoutImpossibleRange() {
+        Ui ui = new Ui();
+        ui.showInvalidTaskNumber(0);
+        assertEquals("A little fog on the path. There are no tasks yet. Add one with: todo read chapter 1",
+                capturedOutput.toString().trim());
+
+        capturedOutput.reset();
+        ui.showInvalidTaskNumber(2);
+        assertEquals("A little fog on the path. Task number must be between 1 and 2. Use list to see your trail.",
+                capturedOutput.toString().trim());
+
+        capturedOutput.reset();
+        ui.showInvalidTaskNumberFormat();
+        assertEquals("A little fog on the path. Please provide a valid task number. Use list to see your trail.",
+                capturedOutput.toString().trim());
+    }
+
+    @Test
     public void showMatchingTasks_noMatch_showsHelpfulMessage() {
         TaskList tasks = new TaskList();
         tasks.add(new Todo("read book"));
 
         new Ui().showMatchingTasks(tasks, "exam");
 
-        assertTrue(capturedOutput.toString().contains("No matching tasks found."));
+        assertTrue(capturedOutput.toString().contains("No matching tasks found. Try another word or #tag."));
     }
 
     @Test
@@ -111,7 +168,7 @@ public class UiTest {
         String output = capturedOutput.toString();
         assertTrue(output.contains("2.[T][ ] read book"));
         assertFalse(output.contains("revise notes"));
-        assertFalse(output.contains("No matching tasks found."));
+        assertFalse(output.contains("No matching tasks found. Try another word or #tag."));
     }
 
     @Test
@@ -122,13 +179,13 @@ public class UiTest {
 
         task.markAsDone();
         ui.showMarked(task, true);
-        assertEquals("Nice! I've marked this task as done:" + System.lineSeparator()
+        assertEquals("One more light along the path. Task marked as done:" + System.lineSeparator()
                 + "       [X] read book (tags: #fun)", capturedOutput.toString().trim());
 
         capturedOutput.reset();
         task.markAsNotDone();
         ui.showMarked(task, false);
-        assertEquals("OK, I've marked this task as not done yet:" + System.lineSeparator()
+        assertEquals("Back on the trail. Task marked as not done:" + System.lineSeparator()
                 + "       [ ] read book (tags: #fun)", capturedOutput.toString().trim());
     }
 
@@ -138,18 +195,19 @@ public class UiTest {
         Ui ui = new Ui();
 
         ui.showTagUpdate(task, true, true);
-        assertTrue(capturedOutput.toString().contains("Nice! I've tagged this task:"));
+        assertTrue(capturedOutput.toString().contains("Trail labels attached. I've tagged this task:"));
 
         capturedOutput.reset();
         ui.showTagUpdate(task, true, false);
-        assertTrue(capturedOutput.toString().contains("This task already has these tags:"));
+        assertTrue(capturedOutput.toString().contains("Already signposted. This task already has these tags:"));
 
         capturedOutput.reset();
         ui.showTagUpdate(task, false, true);
-        assertTrue(capturedOutput.toString().contains("OK, I've removed these tags from this task:"));
+        assertTrue(capturedOutput.toString()
+                .contains("A little less baggage. I've removed these tags from this task:"));
 
         capturedOutput.reset();
         ui.showTagUpdate(task, false, false);
-        assertTrue(capturedOutput.toString().contains("This task does not have these tags:"));
+        assertTrue(capturedOutput.toString().contains("No change needed. This task does not have these tags:"));
     }
 }

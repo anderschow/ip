@@ -5,11 +5,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+import anders.ui.Ui;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
@@ -21,6 +23,7 @@ import javafx.scene.layout.VBox;
 public class MainWindow extends BorderPane {
     private static final String COMMAND_HELP = """
             Command guide
+            A few signposts for your trail.
             Type one command, then press Enter.
             Replace <...> with your own text; leave out the brackets.
 
@@ -62,6 +65,10 @@ public class MainWindow extends BorderPane {
             Example: todo revise notes /tags #school""";
 
     @FXML
+    private Label appName;
+    @FXML
+    private Label tagline;
+    @FXML
     private ScrollPane scrollPane;
     @FXML
     private VBox messages;
@@ -99,12 +106,14 @@ public class MainWindow extends BorderPane {
     private void initialize() {
         assert scrollPane != null && messages != null && input != null && sendButton != null
                 : "FXML must inject all main-window controls before initialization";
+        appName.setText(Ui.NAME);
+        tagline.setText(Ui.TAGLINE);
         sendButton.disableProperty().bind(Bindings.createBooleanBinding(() -> input.getText().isBlank(),
                 input.textProperty()));
-        messages.getChildren().add(DialogBox.getAndersDialog(
-                "Hello! I'm Anders, your study companion.\n"
-                        + "Try todo read chapter 1 to add a task, or use Tasks to see your list.\n"
-                        + "Need more examples? Open Commands."));
+        messages.getChildren().add(DialogBox.getBotDialog(
+                Ui.WELCOME_MESSAGE + "\n\n"
+                        + "Try todo read chapter 1 to begin.\n"
+                        + "Tasks shows your trail. Commands lights the way."));
         Platform.runLater(input::requestFocus);
     }
 
@@ -131,7 +140,7 @@ public class MainWindow extends BorderPane {
     /** Displays command examples on demand while leaving the input draft intact. */
     @FXML
     private void showHelp() {
-        appendReply(DialogBox.getAndersDialog(COMMAND_HELP,
+        appendReply(DialogBox.getBotDialog(COMMAND_HELP,
                 List.of("Command guide", "Add tasks", "View tasks", "Update a task",
                         "Use task numbers from list.", "Use tags")));
         input.requestFocus();
@@ -170,7 +179,7 @@ public class MainWindow extends BorderPane {
 
     /** Reveals the start of a long reply, or the whole reply when it fits in the viewport. */
     private void appendReply(String text) {
-        appendReply(DialogBox.getAndersDialog(text));
+        appendReply(DialogBox.getBotDialog(text));
     }
 
     /** Appends a prepared reply and scrolls to its first readable line. */

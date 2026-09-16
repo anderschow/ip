@@ -20,8 +20,11 @@ import javax.imageio.ImageIO;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import anders.parser.Parser;
+import anders.storage.Storage;
+import anders.ui.Ui;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.geometry.Bounds;
@@ -37,14 +40,18 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.stage.Stage;
 
 /** Checks real FXML layouts and GUI interactions without accessing the user's task file. */
 public class MainWindowTest {
-    private static final String LONG_REPLY = "Here are the tasks in your list:\n"
+    private static final String LONG_REPLY = "Lantern lit. Here are the tasks on your trail:\n"
             + "1.[D][ ] Finish the report with a detailed explanation of the experiment "
             + "(by: Oct 02 2026 6.00 pm) (tags: #school #project)\n"
             + "2.[T][ ] Read chapter 1 and summarize the most useful ideas\n"
             + "3.[E][ ] Study group (from: Oct 02 2026 2.00 pm to: Oct 02 2026 4.00 pm)";
+
+    @TempDir
+    private Path temporaryDirectory;
 
     @BeforeAll
     public static void startToolkit() throws InterruptedException {
@@ -59,6 +66,66 @@ public class MainWindowTest {
     @AfterAll
     public static void stopToolkit() {
         Platform.exit();
+    }
+
+    @Test
+    public void initialize_personality_showsNameGreetingAndLantern() throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow(new ArrayList<>(), 460, 640);
+            assertEquals("Anders", ((Label) window.lookup("#appName")).getText());
+            assertEquals("Your lantern keeper", ((Label) window.lookup("#tagline")).getText());
+            assertTrue(messageAt(window, 0).getText().contains(Ui.WELCOME_MESSAGE));
+            assertEquals("Anders", ((Label) messages(window).getChildren().getFirst()
+                    .lookup("#speaker")).getText());
+            assertEquals("Anders's lantern", window.lookup("#brandIcon").getAccessibleText());
+            saveSnapshot(window, "anders-welcome.png");
+        });
+    }
+
+    @Test
+    public void start_stage_usesAndersTitleAndWindowIcon() throws Exception {
+        runOnFxThread(() -> {
+            Stage stage = new Stage();
+            try {
+                new Main().start(stage);
+                assertEquals("Anders - Your lantern keeper", stage.getTitle());
+                assertEquals(1, stage.getIcons().size());
+                assertFalse(stage.getIcons().getFirst().isError());
+            } finally {
+                stage.close();
+            }
+        });
+    }
+
+    @Test
+    public void handleInput_realSession_displaysThemedSuccessAndErrorReplies() throws Exception {
+        runOnFxThread(() -> {
+            Anders bot = new Anders(new Storage(temporaryDirectory.resolve("tasks.txt").toString()));
+            MainWindow window = new MainWindow(bot::getResponse);
+            new Scene(window, 460, 640);
+            window.resize(460, 640);
+            window.applyCss();
+            window.layout();
+            TextField input = (TextField) window.lookup("#input");
+            input.setText("todo read chapter 1");
+            input.fireEvent(new ActionEvent());
+            assertTrue(messageAt(window, 2).getText().contains("A new trail marker. I've added this task:"));
+            assertTrue(messageAt(window, 2).getText().contains("Your trail holds 1 task."));
+
+            input.setText("mark 1");
+            input.fireEvent(new ActionEvent());
+            assertTrue(messageAt(window, 4).getText().contains("One more light along the path. Task marked as done:"));
+            window.applyCss();
+            window.layout();
+            ScrollPane scroll = (ScrollPane) window.lookup("#scrollPane");
+            scroll.setVvalue(1);
+            saveSnapshot(window, "anders-conversation.png");
+
+            input.setText("todo");
+            input.fireEvent(new ActionEvent());
+            assertTrue(messageAt(window, 6).getText().startsWith("A little fog on the path."));
+            assertTrue(messageAt(window, 6).getText().contains("The description of a todo cannot be empty."));
+        });
     }
 
     @Test
@@ -221,10 +288,14 @@ public class MainWindowTest {
     @Test
     public void dialog_alignmentAndFormatting_keepRepliesReadable() throws Exception {
         runOnFxThread(() -> {
-            DialogBox reply = DialogBox.getAndersDialog("Heading\n     1.[T][ ] read book\n       Detail");
+            DialogBox reply = DialogBox.getBotDialog("Heading\n     1.[T][ ] read book\n       Detail");
             DialogBox user = DialogBox.getUserDialog("todo read  two chapters");
             Label replyText = (Label) reply.lookup("#message");
 
+            assertEquals("Anders", ((Label) reply.lookup("#speaker")).getText());
+            assertEquals("You", ((Label) user.lookup("#speaker")).getText());
+            assertEquals("Anders's lantern", reply.lookup("#avatar").getAccessibleText());
+            assertEquals("Your compass", user.lookup("#avatar").getAccessibleText());
             assertEquals(Pos.TOP_LEFT, reply.getAlignment());
             assertEquals(Pos.TOP_RIGHT, user.getAlignment());
             assertEquals("Heading\n1.[T][ ] read book\nDetail", replyText.getText());
@@ -254,6 +325,13 @@ public class MainWindowTest {
                 assertTrue(reply.getHeight() >= reply.prefHeight(reply.getWidth()) - 1,
                         "Wrapped reply text must not be truncated vertically");
                 assertTrue(input.getWidth() > 200, "The composer must remain usable");
+                for (String id : List.of("appName", "tagline", "tasksButton", "helpButton")) {
+                    var control = window.lookup("#" + id);
+                    assertInsideWindow(window, control.localToScene(control.getBoundsInLocal()));
+                    if (control instanceof Label label) {
+                        assertTrue(label.getWidth() >= label.prefWidth(-1) - 1, "Brand text must not be clipped");
+                    }
+                }
                 assertInsideWindow(window, input.localToScene(input.getBoundsInLocal()));
                 assertInsideWindow(window, reply.localToScene(reply.getBoundsInLocal()), false);
                 saveSnapshot(window, "conversation-" + width + ".png");

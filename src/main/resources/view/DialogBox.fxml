@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.image.ImageView?>
+<?import anders.ProfileIcon?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <fx:root type="HBox" alignment="TOP_LEFT" spacing="8.0" minHeight="-Infinity"
          xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
     <children>
-        <ImageView fx:id="avatar" fitHeight="24.0" fitWidth="24.0" preserveRatio="true" />
+        <ProfileIcon fx:id="avatar" />
         <VBox fx:id="bubble" spacing="3.0" minWidth="0.0" HBox.hgrow="ALWAYS" styleClass="bubble">
             <children>
                 <Label fx:id="speaker" styleClass="speaker" />

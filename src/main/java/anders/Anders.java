@@ -10,18 +10,23 @@ import anders.storage.Storage;
 import anders.ui.Ui;
 
 /**
- * The entry point for the Anders chatbot.
+ * Runs the Anders chatbot and persists its tasks between sessions.
  *
- * <p>Tasks are kept in memory only and are lost when the program exits.</p>
+ * <p>Task changes are persisted so the next session can continue the same trail.</p>
  */
 public class Anders {
     private final Storage storage;
     private final Ui ui;
     private final TaskList tasks;
 
-    /** Creates an Anders session using the default storage file. */
+    /** Creates an Anders session using the existing storage file. */
     public Anders() {
-        storage = new Storage("data/anders.txt");
+        this(new Storage("data/anders.txt"));
+    }
+
+    /** Creates a session with supplied storage so tests can use an isolated task file. */
+    Anders(Storage storage) {
+        this.storage = storage;
         ui = new Ui();
         tasks = new TaskList(storage.load());
     }
@@ -34,21 +39,22 @@ public class Anders {
             System.setOut(new PrintStream(output));
             Command command = Parser.parse(input);
             command.execute(tasks, ui, storage);
-            return output.toString().trim();
         } catch (AndersException e) {
-            return "OOPS!!! " + e.getMessage();
+            ui.showError(e.getMessage());
         } finally {
             System.setOut(originalOutput);
         }
+        return output.toString().trim();
     }
 
     /** Starts Anders and processes commands until the user exits or input ends. */
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         Ui ui = new Ui();
         Storage storage = new Storage("data/anders.txt");
 
         TaskList tasks = new TaskList(storage.load());
+
+        ui.showWelcome();
         boolean isExit = false;
         while (!isExit && ui.hasNextCommand()) {
             try {

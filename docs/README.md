@@ -1,6 +1,25 @@
 # Anders User Guide
 
-Anders is a task manager that supports todos, deadlines, events, completion status, searching, and reusable tags.
+Anders is your lantern keeper: a calm woodland companion for todos, deadlines,
+events, completion status, searching, and reusable tags. Tasks are trail markers;
+finishing one brings a little more light to the path.
+
+The desktop window pairs a forest-green header with parchment message cards,
+amber accents, and original lantern and compass icons. Anders offers gentle
+encouragement and keeps command instructions clear.
+
+```text
+You: todo read chapter 1
+Anders: A new trail marker. I've added this task:
+           [T] read chapter 1
+         Your trail holds 1 task.
+
+You: mark 1
+Anders: One more light along the path. Task marked as done:
+           [X] read chapter 1
+```
+
+Existing saved tasks are still loaded from `data/anders.txt`.
 
 ## Command reference
 
@@ -20,6 +39,7 @@ leaving out the brackets.
 | `tag <number> #<tag>` | Add a tag to a task. | `tag 2 #school` |
 | `untag <number> #<tag>` | Remove a tag from a task. | `untag 2 #school` |
 | `find #<tag>` | Show tasks with that tag. | `find #school` |
+| `bye` | Say goodbye; ends the console session. | `bye` |
 
 Dates in these examples use **day/month/year**, with an optional 24-hour time:
 `2/10/2026 1800` means **2 October 2026 at 6 pm**.

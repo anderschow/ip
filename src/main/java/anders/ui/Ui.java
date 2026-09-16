@@ -8,8 +8,13 @@ import anders.task.Deadline;
 import anders.task.Event;
 import anders.task.Task;
 
-/** Handles console input for Anders. */
+/** Handles input and the lantern keeper personality shared by the console and GUI. */
 public class Ui {
+    public static final String NAME = "Anders";
+    public static final String TAGLINE = "Your lantern keeper";
+    public static final String WELCOME_MESSAGE = "Hello, wanderer. I'm " + NAME + ", your lantern keeper.\n"
+            + "One task at a time; we'll find the way.";
+
     private final Scanner scanner;
 
     /** Creates a console user interface reading from standard input. */
@@ -30,13 +35,9 @@ public class Ui {
     /** Prints the startup greeting. */
     public void showWelcome() {
         showSeparator();
-        System.out.println("    _                 _                \n"
-                + "   / \\   _ __   _| | ___ _ __ ___\n"
-                + "  / _ \\ | '_ \\ / _` |/ _ \\ '__/ __|\n"
-                + " / ___ \\| | | | (_| |  __/ |  \\__ \\\n"
-                + "/_/   \\_\\_| |_|\\__,_|\\___|_|  |___/");
-        System.out.println("Hello! I'm Anders, your friendly study companion.");
-        System.out.println("What can I do for you today?");
+        System.out.println(NAME + " | " + TAGLINE);
+        System.out.println(WELCOME_MESSAGE);
+        System.out.println("Start your trail with: todo read chapter 1");
         showSeparator();
     }
 
@@ -47,17 +48,21 @@ public class Ui {
 
     /** Prints an error message. */
     public void showError(String message) {
-        System.out.println("     OOPS!!! " + message);
+        System.out.println("     A little fog on the path. " + message);
     }
 
     /** Prints a goodbye message. */
     public void showGoodbye() {
-        System.out.println("     Bye! Keep learning, and see you again soon!");
+        System.out.println("     Rest well, wanderer. I'll keep the lantern lit.");
     }
 
     /** Displays all tasks in the list. */
     public void showTaskList(TaskList tasks) {
-        System.out.println("     Here are the tasks in your list:");
+        if (tasks.size() == 0) {
+            System.out.println("     A clear path! No tasks yet. Try: todo read chapter 1");
+            return;
+        }
+        System.out.println("     Lantern lit. Here are the tasks on your trail:");
         for (int i = 0; i < tasks.size(); i++) {
             System.out.println("     " + (i + 1) + "." + formatTask(tasks.get(i)));
         }
@@ -65,7 +70,7 @@ public class Ui {
 
     /** Displays tasks whose descriptions contain the supplied keyword, or a no-match message. */
     public void showMatchingTasks(TaskList tasks, String keyword) {
-        System.out.println("     Here are the matching tasks in your list:");
+        System.out.println("     I've held the lantern up to these matches:");
         String searchText = keyword.toLowerCase(Locale.ROOT);
         boolean hasMatch = false;
         for (int i = 0; i < tasks.size(); i++) {
@@ -79,15 +84,15 @@ public class Ui {
             }
         }
         if (!hasMatch) {
-            System.out.println("     No matching tasks found.");
+            System.out.println("     No matching tasks found. Try another word or #tag.");
         }
     }
 
     /** Displays a task-added confirmation. */
     public void showTaskAdded(Task task, int taskCount) {
-        System.out.println("     Got it. I've added this task:");
+        System.out.println("     A new trail marker. I've added this task:");
         System.out.println("       " + task);
-        System.out.println("     Now you have " + taskCount + " tasks in the list.");
+        showTaskCount(taskCount);
     }
 
     /**
@@ -97,8 +102,8 @@ public class Ui {
      * @param isDone whether the task is now marked as done
      */
     public void showMarked(Task task, boolean isDone) {
-        System.out.println(isDone ? "     Nice! I've marked this task as done:"
-                : "     OK, I've marked this task as not done yet:");
+        System.out.println(isDone ? "     One more light along the path. Task marked as done:"
+                : "     Back on the trail. Task marked as not done:");
         System.out.println("       [" + (isDone ? "X" : " ") + "] " + task.getDescription()
                 + task.getTagsDisplayText());
     }
@@ -112,30 +117,39 @@ public class Ui {
      */
     public void showTagUpdate(Task task, boolean isAdding, boolean hasChanged) {
         if (isAdding) {
-            System.out.println(hasChanged ? "     Nice! I've tagged this task:"
-                    : "     This task already has these tags:");
+            System.out.println(hasChanged ? "     Trail labels attached. I've tagged this task:"
+                    : "     Already signposted. This task already has these tags:");
         } else {
-            System.out.println(hasChanged ? "     OK, I've removed these tags from this task:"
-                    : "     This task does not have these tags:");
+            System.out.println(hasChanged ? "     A little less baggage. I've removed these tags from this task:"
+                    : "     No change needed. This task does not have these tags:");
         }
         System.out.println("       " + formatTask(task));
     }
 
     /** Displays a deletion confirmation. */
     public void showDeleted(Task task, int remaining) {
-        System.out.println("     Noted. I've removed this task:");
+        System.out.println("     Path cleared. I've removed this task:");
         System.out.println("       " + formatTask(task));
-        System.out.println("     Now you have " + remaining + " tasks in the list.");
+        showTaskCount(remaining);
     }
 
     /** Displays an invalid task-number message. */
     public void showInvalidTaskNumber(int count) {
-        System.out.println("     Task number must be between 1 and " + count + ".");
+        if (count == 0) {
+            showError("There are no tasks yet. Add one with: todo read chapter 1");
+        } else {
+            showError("Task number must be between 1 and " + count + ". Use list to see your trail.");
+        }
     }
 
     /** Displays a non-numeric task-number message. */
     public void showInvalidTaskNumberFormat() {
-        System.out.println("     Please provide a valid task number.");
+        showError("Please provide a valid task number. Use list to see your trail.");
+    }
+
+    /** Prints the total number of stored tasks with the appropriate singular or plural noun. */
+    private void showTaskCount(int count) {
+        System.out.println("     Your trail holds " + count + (count == 1 ? " task." : " tasks."));
     }
 
     /** Formats a task with its type and completion icons for console display. */
