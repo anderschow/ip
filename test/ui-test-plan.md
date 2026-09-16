@@ -108,3 +108,31 @@ Each test case specifies its aim, commands, and expected output associated with 
   ]
 }
 ```
+
+## GUI checks
+
+Run `gradlew.bat test` (or `./gradlew test`) with Java 25. `MainWindowTest` loads the
+real FXML and CSS, checks input submission and history, draft preservation, narrow
+layouts, long-word wrapping, and scrolling. It saves actual JavaFX previews under
+`build/reports/gui/` at 360, 460, and 720 pixels wide.
+
+For a manual pass, launch `gradlew.bat run` (or `./gradlew run`) and check:
+
+| Action | Expected result |
+| --- | --- |
+| Open the window and resize it down to its minimum size. | Input stays visible; messages wrap; no horizontal scrolling or clipped text. |
+| Type spaces only, then press Enter. | Send stays disabled and no message is added. |
+| Send `todo read chapter 1` using Enter, then send `list` with Send. | Each command runs once; input clears and regains focus. |
+| Draft a command, press Up repeatedly, then Down repeatedly. | Submitted commands are recalled in order; navigation stops at the ends and restores the draft. |
+| Click Tasks and Commands while drafting. | Tasks lists saved tasks; Commands shows examples; both preserve the draft. |
+| Open Commands, then narrow the window and copy the guide. | The guide explains placeholders, groups commands by purpose, and gives each command a description. Section headings and task-number guidance are bold. Examples stay regular and wrap; copied text has no formatting markers. |
+| Read Update a task in Commands. | The guide defines `<number>` as any current task number from 1 to the task count, explains that two tasks allow either 1 or 2, and notes renumbering after deletion. |
+| Read the Example lines in Commands. | Each is one complete command accepted by the parser. The date explanation makes day/month order and 24-hour time clear. |
+| Request a list longer than the visible conversation area. | The beginning of the new reply is visible; scrolling reveals the remaining lines. |
+| Scroll back to older replies. | The scroll position is freely adjustable. |
+| Right-click a reply and choose Copy message, then paste into the input. | The complete reply is copied without console indentation. |
+| Navigate controls with Tab and Shift+Tab. | Focus is visible; Enter submits from the input; buttons work with the keyboard. |
+
+The console cases above remain unchanged because command syntax and output are
+unchanged. Run the console test skill in an isolated workspace: its runner replaces
+`data/anders.txt` as part of its fixtures.

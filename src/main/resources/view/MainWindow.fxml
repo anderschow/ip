@@ -1,20 +1,48 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
-<fx:root type="AnchorPane" prefHeight="700.0" prefWidth="600.0"
-         xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
-    <children>
+<fx:root type="BorderPane" prefHeight="640.0" prefWidth="460.0" styleClass="main-window"
+         stylesheets="@main.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="8.0" styleClass="header">
+            <Label text="Anders" styleClass="app-title" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Button fx:id="tasksButton" text="Tasks" onAction="#showTasks" styleClass="quiet-button">
+                <tooltip><Tooltip text="Show your task list without replacing your draft" /></tooltip>
+            </Button>
+            <Button fx:id="helpButton" text="Commands" onAction="#showHelp" styleClass="quiet-button">
+                <tooltip><Tooltip text="Show command examples and keyboard shortcuts" /></tooltip>
+            </Button>
+        </HBox>
+    </top>
+    <center>
         <ScrollPane fx:id="scrollPane" fitToWidth="true" hbarPolicy="NEVER"
-                    AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="55.0"
-                    AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
-            <content><VBox fx:id="messages" spacing="8.0" /></content>
+                    vbarPolicy="AS_NEEDED" styleClass="conversation" accessibleText="Conversation">
+            <content>
+                <VBox fx:id="messages" spacing="10.0" styleClass="messages" />
+            </content>
         </ScrollPane>
-        <TextField fx:id="input" onAction="#handleInput" prefHeight="40.0"
-                   AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="85.0" AnchorPane.bottomAnchor="0.0" />
-        <Button text="Send" onAction="#handleInput" prefHeight="40.0" prefWidth="80.0"
-                AnchorPane.rightAnchor="0.0" AnchorPane.bottomAnchor="0.0" />
-    </children>
+    </center>
+    <bottom>
+        <VBox spacing="6.0" styleClass="composer">
+            <HBox alignment="CENTER" spacing="8.0">
+                <TextField fx:id="input" onAction="#handleInput" onKeyPressed="#handleHistory"
+                           promptText="Try: todo read chapter 1" accessibleText="Command"
+                           minWidth="0.0" HBox.hgrow="ALWAYS" />
+                <Button fx:id="sendButton" text="Send" onAction="#handleInput"
+                        minWidth="-Infinity" styleClass="send-button">
+                    <tooltip><Tooltip text="Send command (Enter)" /></tooltip>
+                </Button>
+            </HBox>
+            <Label text="Enter to send &#183; &#8593;/&#8595; history &#183; Right-click a reply to copy"
+                   wrapText="true" styleClass="input-hint" />
+        </VBox>
+    </bottom>
 </fx:root>
