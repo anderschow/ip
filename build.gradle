@@ -55,6 +55,10 @@ sourceSets {
     smoke {
         compileClasspath += sourceSets.main.output + configurations.runtimeClasspath
     }
+    test {
+        compileClasspath += sourceSets.smoke.output
+        runtimeClasspath += sourceSets.smoke.output
+    }
 }
 
 test {

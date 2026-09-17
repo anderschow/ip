@@ -1,6 +1,11 @@
 package anders.smoke;
 
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -13,8 +18,6 @@ import javafx.stage.Window;
 
 /** Exercises the real java -jar application without putting test commands or hooks in the release JAR. */
 public class SmokeAgent {
-    private static final AtomicBoolean IS_FINISHED = new AtomicBoolean();
-
     /**
      * Starts a bounded test observer before the application's normal launcher runs.
      *
@@ -27,46 +30,64 @@ public class SmokeAgent {
         observer.start();
     }
 
-    /** Waits for JavaFX startup and fails instead of silently accepting a process that never opens a window. */
+    /** Waits for a usable window and makes startup or command failures visible to the test process. */
     private static void waitForWindow(String mode) {
-        long deadline = System.nanoTime() + 30_000_000_000L;
-        while (!IS_FINISHED.get() && System.nanoTime() < deadline) {
-            try {
-                Platform.runLater(() -> inspectWindow(mode));
-            } catch (IllegalStateException exception) {
-                // The regular application launcher has not started JavaFX yet.
-            }
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException exception) {
-                Thread.currentThread().interrupt();
-                fail(exception);
-                return;
-            }
-        }
-        if (!IS_FINISHED.get()) {
-            fail(new AssertionError("Anders did not display a usable window within 30 seconds."));
+        try {
+            awaitWindow(Platform::runLater, () -> inspectWindow(mode), 30_000);
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            fail(exception);
+        } catch (ExecutionException | TimeoutException exception) {
+            fail(exception);
         }
     }
 
-    /** Runs commands through the visible input field once the real application's stage is showing. */
-    private static void inspectWindow(String mode) {
-        if (IS_FINISHED.get()) {
-            return;
-        }
-        for (Window window : Window.getWindows()) {
-            if (window instanceof Stage stage && stage.isShowing() && stage.getTitle().startsWith("Anders")) {
-                IS_FINISHED.set(true);
-                try {
-                    checkSession(stage.getScene().getRoot(), mode);
-                    System.out.println("SMOKE PASSED: " + mode);
-                    Platform.exit();
-                } catch (Throwable failure) {
-                    fail(failure);
-                }
+    /**
+     * Waits for each inspection before scheduling another so a slow startup cannot build a callback backlog.
+     *
+     * @param dispatcher the GUI event queue, or a controlled queue in unit tests
+     * @param inspection returns true once a usable window has been checked
+     * @param timeoutMillis the maximum time to wait for the window
+     * @throws InterruptedException if the observer is interrupted
+     * @throws ExecutionException if inspecting the window or checking its commands fails
+     * @throws TimeoutException if the window never becomes usable
+     */
+    static void awaitWindow(Executor dispatcher, Callable<Boolean> inspection, long timeoutMillis)
+            throws InterruptedException, ExecutionException, TimeoutException {
+        long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMillis);
+        while (System.nanoTime() < deadline) {
+            FutureTask<Boolean> check = new FutureTask<>(inspection);
+            try {
+                dispatcher.execute(check);
+            } catch (IllegalStateException exception) {
+                // The regular application launcher has not started JavaFX yet.
+                Thread.sleep(100);
+                continue;
+            }
+            long remaining = Math.max(0, deadline - System.nanoTime());
+            if (check.get(remaining, TimeUnit.NANOSECONDS)) {
                 return;
             }
+            Thread.sleep(100);
         }
+        throw new TimeoutException("Anders did not display a usable window before the smoke-test deadline.");
+    }
+
+    /** Checks the real application's window, then closes it after the commands' queued layout callbacks. */
+    private static boolean inspectWindow(String mode) {
+        for (Window window : Window.getWindows()) {
+            if (window instanceof Stage stage && stage.isShowing() && stage.getTitle().startsWith("Anders")) {
+                checkSession(stage.getScene().getRoot(), mode);
+                Platform.runLater(() -> {
+                    // Normal last-window shutdown waits for the JavaFX queue to become idle.
+                    // Calling Platform.exit() here can detach macOS Glass while callbacks are still pending.
+                    stage.close();
+                    System.out.println("SMOKE PASSED: " + mode);
+                });
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Checks creation, validation, and persistence across two independently launched JVMs. */

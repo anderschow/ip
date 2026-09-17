@@ -232,9 +232,15 @@ agent from outside that folder, and launches `java -jar`. A fresh user-home fold
 also prevents an existing JavaFX cache from masking missing libraries.
 The first GUI session adds and tags a task, rejects an invalid date, and marks
 the task done. The second session checks that the task, status, and tag reload,
-then unmarks and deletes it. Both sessions must exit successfully with
-`SMOKE PASSED`. Full input/output records and the release checksum are written
-to `build/reports/jar-smoke/`. The process times out on hangs.
+then unmarks and deletes it. The observer waits for each window inspection before
+scheduling another. After checking commands, it lets queued reply layouts finish
+and closes the window normally, so JavaFX can shut down after its event queue is
+idle. Both sessions must print `SMOKE PASSED` after closing the window and exit
+with code 0. An uncaught exception or a nonzero exit still fails the test, even
+if the success message was printed. Full input/output records and the release
+checksum are written to `build/reports/jar-smoke/`. The process times out on hangs.
+`SmokeAgentTest` covers a slow GUI without a callback backlog, delayed toolkit
+startup, command assertion failures, and a GUI that never runs its callbacks.
 
 GitHub Actions builds `anders.jar` once and downloads that same artifact into
 Windows x64, Linux x64, Intel Mac, and Apple Silicon Mac smoke-test jobs. Every
