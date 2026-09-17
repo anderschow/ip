@@ -23,24 +23,36 @@ tasks locally so you can continue where you left off.
 
 ## Quick start
 
-The current build targets **Windows** and requires **JDK 25**. macOS and Linux
-require JavaFX dependencies configured for their platform before building.
+Use **64-bit Java 25**. The same `anders.jar` includes JavaFX for these platforms:
 
-1. Install JDK 25 and make sure `java -version` reports version 25.
-   Set `JAVA_HOME` to the JDK 25 installation if Gradle uses a different Java version.
-2. Download and extract the source from the
-   [Anders repository](https://github.com/anderschow/ip), or use your existing
-   project folder.
-3. Open a terminal in the project folder containing `gradlew.bat`.
-4. Run the following command. The first run needs an internet connection to
-   download Gradle and the project dependencies.
+| Your computer | Java 25 architecture to install |
+| --- | --- |
+| Windows on Intel/AMD | x64 |
+| Linux desktop on Intel/AMD | x64 |
+| Mac with an Intel processor | x64 |
+| Mac with an Apple M-series chip | AArch64 / ARM64 |
 
-   ```powershell
-   ./gradlew.bat run
+On a Mac, **Apple menu → About This Mac** shows whether you have an Intel processor
+or an Apple chip. ARM versions of Windows/Linux and 32-bit Java are not included
+in this release. Linux needs a graphical desktop with GTK 3.
+
+1. Install [Java 25](https://adoptium.net/temurin/releases/?version=25) for your
+   operating system and architecture. A JDK package is suitable. JavaFX is already
+   included in Anders; you do not need to install it separately.
+2. Open the [Anders releases page](https://github.com/anderschow/ip/releases).
+   Under the release's **Assets**, download **`anders.jar`**.
+   The **Source code** ZIP/TAR files are for developers.
+3. Place `anders.jar` in a folder where you want to keep your tasks.
+4. Open a terminal in that folder using the instructions below.
+5. Run:
+
+   ```text
+   java -version
+   java -jar anders.jar
    ```
 
-5. When the Anders window opens, type each command below into the input box,
-   pressing **Enter** after each one:
+   The first command should report version **25**. The second opens the Anders window.
+6. Type each command below into the app's input box, pressing **Enter** after each:
 
    ```text
    todo read chapter 1
@@ -52,23 +64,31 @@ With an initially empty task list, the first command adds task 1, `list` shows i
 and `mark 1` marks it as done. If you already have tasks, use the new task's number
 from `list` instead.
 
-### Running a packaged JAR
+Keep launching from the same folder so Anders finds the same saved tasks.
+After downloading Java and the JAR, Anders can run offline.
 
-To build a JAR from the project folder:
+If no release has an `anders.jar` asset yet, the packaged download has not been
+published. Developers can use the
+[build-from-source instructions](https://github.com/anderschow/ip#build-from-source-developers)
+to create it.
 
-```powershell
-./gradlew.bat shadowJar
-```
+### Windows
 
-This creates `build/libs/anders.jar`. Copy it into a folder where you want to keep
-your tasks, open a terminal in that folder, and run:
+Open the folder containing `anders.jar` in File Explorer. Click the address bar,
+type `powershell`, and press **Enter**. Run the two Java commands above.
 
-```text
-java -jar anders.jar
-```
+### macOS
 
-JDK 25 is still required. Start Anders from the same folder each time so it finds
-the same saved tasks.
+Open **Terminal**. Type `cd ` (including the space), drag the folder containing
+`anders.jar` from Finder into Terminal, and press **Enter**.
+Run the two Java commands above.
+
+### Linux
+
+In your file manager, open the folder containing `anders.jar`, right-click an empty
+area, and choose **Open in Terminal** if available. Alternatively, open Terminal
+and run `cd "/path/to/your/folder"`, replacing the example path with your folder.
+Run the two Java commands above.
 
 ## Using the desktop window
 
@@ -319,7 +339,7 @@ A command containing an invalid tag is rejected without changing any tasks.
 
 Anders automatically saves task additions, completion changes, deletions, and
 tag changes to `data/anders.txt`, relative to the folder from which it runs.
-For `./gradlew.bat run`, this is the project folder.
+Start the terminal in the folder containing `anders.jar` before launching.
 
 The file and its parent directory are created on the first successful save.
 Tasks, dates, completion status, and tags are loaded on the next launch.
@@ -354,7 +374,11 @@ In the desktop window, this message leaves the window open. In console mode,
 
 | Problem | What to do |
 | --- | --- |
-| The app will not start, or reports an unsupported Java/class version. | Check `java -version` and `JAVA_HOME`; use JDK 25. The current JavaFX build targets Windows. |
+| The app will not start, or reports an unsupported Java/class version. | Run `java -version` in the same terminal and use 64-bit Java 25 matching your OS and CPU. Check the Quick start table. |
+| The terminal cannot find `java`. | Install Java 25, add its `bin` folder to your PATH if needed, and open a new terminal. |
+| Java reports `Unable to access jarfile anders.jar`. | Open the terminal in the folder containing the downloaded `anders.jar`, and check its filename. |
+| Linux reports a GTK or display error. | Use a graphical desktop and install your distribution's GTK 3 runtime. A headless server needs a virtual display. |
+| Anders reports that it could not start while extracting libraries. | Check that your user-home folder is writable; Anders caches its bundled JavaFX libraries there. Download a fresh release JAR if it is incomplete. |
 | Anders does not recognise a command. | Use a lowercase command from the reference, supply its required arguments, and enter one command at a time. Click **Commands** for examples. |
 | A task number is rejected. | Run `list` and choose a current whole number from 1 to the task count. Add a task first if the list is empty. |
 | A date or event range is rejected. | Check the [accepted formats](#dates-and-times), the calendar date, and the time. An event must end at or after it starts. |

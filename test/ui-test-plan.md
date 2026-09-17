@@ -217,6 +217,43 @@ Each test case specifies its aim, commands, and expected output associated with 
 }
 ```
 
+## Packaged JAR checks
+
+Use ordinary JDK 25 without bundled JavaFX. Build the JAR and external GUI test
+agent with `.\gradlew.bat check shadowJar smokeAgentJar` on Windows or
+`./gradlew check shadowJar smokeAgentJar` on macOS/Linux. Run
+`python test/run_jar_smoke.py`; use `xvfb-run --auto-servernum` before each
+command on headless Linux.
+
+The script verifies all four native-library folders, the manifest entry point,
+the absence of duplicate entries, and that the test agent is not in the release.
+It copies only `anders.jar` into a fresh temporary working folder, supplies the
+agent from outside that folder, and launches `java -jar`. A fresh user-home folder
+also prevents an existing JavaFX cache from masking missing libraries.
+The first GUI session adds and tags a task, rejects an invalid date, and marks
+the task done. The second session checks that the task, status, and tag reload,
+then unmarks and deletes it. Both sessions must exit successfully with
+`SMOKE PASSED`. Full input/output records and the release checksum are written
+to `build/reports/jar-smoke/`. The process times out on hangs.
+
+GitHub Actions builds `anders.jar` once and downloads that same artifact into
+Windows x64, Linux x64, Intel Mac, and Apple Silicon Mac smoke-test jobs. Every
+job uses plain JDK 25. Compare their SHA-256 logs to confirm the artifact is
+identical. Check all `build` and `jar-smoke` jobs after pushing; a previous green
+run does not validate a newer local JAR.
+
+Before publishing, also copy the tested JAR into an empty folder and manually run
+`java -jar anders.jar` without the agent. Ask testers on the other operating
+systems to repeat the following checks:
+
+| Action | Expected result |
+| --- | --- |
+| Start the same release JAR with Java 25. | The GUI opens with no separate JavaFX installation. |
+| Add each task type, tag a task, mark it, and restart from the same folder. | Tasks, dates, status, and tags are restored. |
+| Enter an invalid date and an invalid task number. | Helpful errors appear, and the next valid command works. |
+| Resize, scroll, use Tasks and Commands, and submit with Enter and Send. | Controls remain usable and text remains readable. |
+| Inspect the original project data file after automated smoke testing. | Its contents are unchanged; the smoke tests use temporary data. |
+
 ## GUI checks
 
 Run `gradlew.bat test` (or `./gradlew test`) with Java 25. `MainWindowTest` loads the
@@ -229,7 +266,8 @@ Java 25 and Xvfb installed. This provides a virtual display for the JavaFX tests
 The workflow uses this command only on Linux; macOS and Windows run
 `./gradlew check` directly. Each job has a 10-minute timeout so a stalled GUI
 toolkit cannot keep CI running indefinitely. After pushing a workflow change,
-check the new run: all three platform jobs should finish successfully.
+check the new run: Windows, Linux, Intel Mac, and Apple Silicon Mac build jobs
+and all packaged-JAR smoke-test jobs should finish successfully.
 
 For a manual pass, launch `gradlew.bat run` (or `./gradlew run`) and check:
 
